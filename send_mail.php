@@ -53,8 +53,12 @@ define('FROM_NAME', env('FROM_NAME', 'Veresvill - Villamos Felülvizsgálat'));
 define('RECAPTCHA_SECRET', env('RECAPTCHA_SECRET', '6LdAzG8sAAAAAIbEobU5Eg9BuUTv_H5dwT9h6mBp'));
 
 // ============================================
-// reCAPTCHA ellenőrzés
+// reCAPTCHA ellenőrzés (teszt módban kikapcsolva)
 // ============================================
+if (env('APP_DEBUG') === 'true') {
+    // Teszt mód — reCAPTCHA kihagyva
+} else {
+
 $recaptchaResponse = $_POST['g-recaptcha-response'] ?? '';
 if (empty($recaptchaResponse)) {
     http_response_code(400);
@@ -89,6 +93,8 @@ if (empty($recaptchaData['success'])) {
     echo json_encode(['success' => false, 'message' => 'reCAPTCHA ellenőrzés sikertelen. Kérjük, próbálja újra.']);
     exit;
 }
+
+} // end APP_DEBUG reCAPTCHA skip
 
 // ============================================
 // Űrlap adatok feldolgozása
