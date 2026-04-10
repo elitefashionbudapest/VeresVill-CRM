@@ -146,39 +146,43 @@ $urgencyLabel = $urgencyLabels[$urgency] ?? $urgency;
 $dateTime = date('Y.m.d. H:i');
 
 // ============================================
-// Email küldés az ADMINNAK
+// Email küldés az ADMINNAK (teszt módban kihagyva)
 // ============================================
-try {
-    $adminMail = new PHPMailer(true);
-    $adminMail->CharSet = 'UTF-8';
-    $adminMail->Encoding = 'base64';
+if (env('APP_DEBUG') === 'true') {
+    error_log("send_mail.php [TEST MODE]: Admin email kihagyva - {$name} | {$propertyLabel}");
+} else {
+    try {
+        $adminMail = new PHPMailer(true);
+        $adminMail->CharSet = 'UTF-8';
+        $adminMail->Encoding = 'base64';
 
-    // SMTP beállítások
-    $adminMail->isSMTP();
-    $adminMail->Host       = SMTP_HOST;
-    $adminMail->SMTPAuth   = true;
-    $adminMail->Username   = SMTP_USER;
-    $adminMail->Password   = SMTP_PASS;
-    $adminMail->SMTPSecure = SMTP_SECURE;
-    $adminMail->Port       = SMTP_PORT;
+        // SMTP beállítások
+        $adminMail->isSMTP();
+        $adminMail->Host       = SMTP_HOST;
+        $adminMail->SMTPAuth   = true;
+        $adminMail->Username   = SMTP_USER;
+        $adminMail->Password   = SMTP_PASS;
+        $adminMail->SMTPSecure = SMTP_SECURE;
+        $adminMail->Port       = SMTP_PORT;
 
-    // Feladó / Címzett
-    $adminMail->setFrom(FROM_EMAIL, FROM_NAME);
-    $adminMail->addAddress(ADMIN_EMAIL, ADMIN_NAME);
-    $adminMail->addBCC('adam@visualbyadam.hu', 'Adam');
-    $adminMail->addReplyTo($email, $name);
+        // Feladó / Címzett
+        $adminMail->setFrom(FROM_EMAIL, FROM_NAME);
+        $adminMail->addAddress(ADMIN_EMAIL, ADMIN_NAME);
+        $adminMail->addBCC('adam@visualbyadam.hu', 'Adam');
+        $adminMail->addReplyTo($email, $name);
 
-    // Tartalom
-    $adminMail->isHTML(true);
-    $adminMail->Subject = "Új megrendelés - {$name} | {$propertyLabel} | {$urgencyLabel}";
-    $adminMail->Body    = getAdminEmailHtml($name, $email, $phone, $address, $propertyLabel, $size, $urgencyLabel, $message, $dateTime);
-    $adminMail->AltBody = getAdminEmailText($name, $email, $phone, $address, $propertyLabel, $size, $urgencyLabel, $message, $dateTime);
+        // Tartalom
+        $adminMail->isHTML(true);
+        $adminMail->Subject = "Új megrendelés - {$name} | {$propertyLabel} | {$urgencyLabel}";
+        $adminMail->Body    = getAdminEmailHtml($name, $email, $phone, $address, $propertyLabel, $size, $urgencyLabel, $message, $dateTime);
+        $adminMail->AltBody = getAdminEmailText($name, $email, $phone, $address, $propertyLabel, $size, $urgencyLabel, $message, $dateTime);
 
-    $adminMail->send();
-} catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Hiba történt az email küldésekor. Kérjük, próbálja újra később.']);
-    exit;
+        $adminMail->send();
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Hiba történt az email küldésekor. Kérjük, próbálja újra később.']);
+        exit;
+    }
 }
 
 // ============================================
@@ -233,8 +237,9 @@ try {
 }
 
 // ============================================
-// Visszaigazoló email a MEGRENDELŐNEK
+// Visszaigazoló email a MEGRENDELŐNEK (teszt módban kihagyva)
 // ============================================
+if (env('APP_DEBUG') !== 'true') {
 try {
     $customerMail = new PHPMailer(true);
     $customerMail->CharSet = 'UTF-8';
@@ -261,6 +266,7 @@ try {
 } catch (Exception $e) {
     // A megrendelő email hiba nem kritikus, az admin emailt már elküldtük
 }
+} // end APP_DEBUG email skip
 
 // Siker
 echo json_encode(['success' => true, 'message' => 'Köszönjük megkeresését! Kollégánk 60 percen belül felveszi Önnel a kapcsolatot.']);
