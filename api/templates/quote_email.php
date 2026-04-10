@@ -8,8 +8,7 @@
  */
 function getQuoteEmailHtml(array $order, int $amount, array $slots, string $token): string
 {
-    $nameParts = explode(' ', trim($order['customer_name'] ?? ''));
-    $firstName = count($nameParts) > 1 ? end($nameParts) : $nameParts[0];
+    $firstName = htmlspecialchars($order['customer_name'] ?? '');
     $address = htmlspecialchars($order['customer_address'] ?? $order['address'] ?? '');
     $propertyLabel = htmlspecialchars($order['property_type_label'] ?? $order['property_type'] ?? '');
     $size = htmlspecialchars($order['size'] ?? '');
@@ -183,8 +182,7 @@ HTML;
  */
 function getQuoteEmailText(array $order, int $amount, array $slots, string $token): string
 {
-    $nameParts = explode(' ', trim($order['customer_name'] ?? ''));
-    $firstName = count($nameParts) > 1 ? end($nameParts) : $nameParts[0];
+    $firstName = $order['customer_name'] ?? '';
     $address = $order['customer_address'] ?? $order['address'] ?? '';
     $propertyLabel = $order['property_type_label'] ?? $order['property_type'] ?? '';
     $size = $order['size'] ?? '';
