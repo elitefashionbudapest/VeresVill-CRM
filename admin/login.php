@@ -11,125 +11,197 @@
     <!-- Google Fonts -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
     <style>
+        :root {
+            --vv-blue: #3B82F6;
+            --vv-blue-dark: #2563EB;
+            --vv-text: #1E293B;
+            --vv-text-muted: #64748B;
+            --vv-border: #E2E8F0;
+        }
+        * { -webkit-font-smoothing: antialiased; }
         body {
-            font-family: 'Inter', 'Source Sans Pro', sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: #0F172A;
             min-height: 100vh;
+            position: relative;
+            overflow: hidden;
         }
-        .login-page {
-            background: transparent;
+        body::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background:
+                radial-gradient(ellipse at 20% 50%, rgba(59,130,246,0.12) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(59,130,246,0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(16,185,129,0.06) 0%, transparent 50%);
+            animation: bgShift 20s ease-in-out infinite alternate;
         }
+        @keyframes bgShift {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(-2%, 2%) rotate(1deg); }
+        }
+        .login-page { background: transparent; }
         .login-box {
-            width: 400px;
-            max-width: 95vw;
+            width: 420px;
+            max-width: 92vw;
+            position: relative;
+            z-index: 1;
         }
         .card {
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05);
+            border: none;
+            backdrop-filter: blur(20px);
+            background: rgba(255,255,255,0.97);
+            overflow: hidden;
         }
-        .card-header {
-            background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
-            border-radius: 16px 16px 0 0 !important;
-            padding: 30px;
+        .login-header-section {
+            padding: 36px 36px 24px;
+            text-align: center;
         }
         .login-logo img {
-            max-width: 180px;
-            margin-bottom: 8px;
-            background: #fff;
-            padding: 6px 14px;
-            border-radius: 8px;
+            max-width: 170px;
+            margin-bottom: 12px;
         }
-        .login-logo p {
-            color: rgba(255,255,255,0.85);
+        .login-subtitle {
+            color: var(--vv-text-muted);
             font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
             margin: 0;
         }
         .card-body {
-            padding: 30px;
+            padding: 0 36px 36px;
         }
-        .input-group-text {
-            background: #f8f9fa;
-            border-right: 0;
-        }
-        .form-control {
-            border-left: 0;
+        .login-box-msg {
             font-size: 15px;
-            padding: 10px 12px;
+            font-weight: 500;
+            color: var(--vv-text);
+            margin-bottom: 24px;
+            text-align: center;
         }
-        .form-control:focus {
-            box-shadow: none;
-            border-color: #4A90E2;
+        .form-group-modern {
+            margin-bottom: 16px;
         }
-        .form-control:focus + .input-group-append .input-group-text,
-        .input-group:focus-within .input-group-text {
-            border-color: #4A90E2;
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
-            border: none;
-            padding: 12px;
-            font-size: 16px;
+        .form-group-modern label {
+            font-size: 12px;
             font-weight: 600;
-            border-radius: 8px;
-            transition: transform 0.1s, box-shadow 0.2s;
+            color: var(--vv-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 6px;
+            display: block;
         }
-        .btn-primary:hover {
+        .form-group-modern .form-control {
+            border: 1.5px solid var(--vv-border);
+            border-radius: 10px;
+            font-size: 15px;
+            padding: 12px 16px;
+            width: 100%;
+            outline: none;
+            transition: all 0.2s;
+            background: #F8FAFC;
+            color: var(--vv-text);
+        }
+        .form-group-modern .form-control:focus {
+            border-color: var(--vv-blue);
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+            background: #fff;
+        }
+        .form-group-modern .form-control::placeholder {
+            color: #94A3B8;
+        }
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            font-size: 15px;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            background: var(--vv-blue);
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 0.01em;
+            margin-top: 8px;
+        }
+        .btn-login:hover {
+            background: var(--vv-blue-dark);
             transform: translateY(-1px);
-            box-shadow: 0 4px 15px rgba(74,144,226,0.4);
-            background: linear-gradient(135deg, #5a9ee6 0%, #4088c7 100%);
+            box-shadow: 0 6px 20px rgba(59,130,246,0.35);
+        }
+        .btn-login:active {
+            transform: translateY(0);
+        }
+        .btn-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
         .alert {
-            border-radius: 8px;
-            font-size: 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            border: none;
+            padding: 12px 16px;
+        }
+        .alert-danger {
+            background: #FEF2F2;
+            color: #DC2626;
         }
         .login-footer {
             text-align: center;
-            padding: 15px;
-            color: rgba(255,255,255,0.4);
+            padding: 20px;
+            color: rgba(255,255,255,0.25);
             font-size: 12px;
+            font-weight: 500;
+            position: relative;
+            z-index: 1;
+        }
+        .divider {
+            height: 1px;
+            background: var(--vv-border);
+            margin: 0 36px;
         }
     </style>
 </head>
 <body class="hold-transition login-page">
     <div class="login-box">
         <div class="card">
-            <div class="card-header text-center" id="login-header">
+            <div class="login-header-section">
                 <div class="login-logo">
                     <img src="../veresvill_logo.webp" alt="VeresVill">
-                    <p>Villamos Felülvizsgálat CRM</p>
                 </div>
+                <p class="login-subtitle">CRM Rendszer</p>
             </div>
+            <div class="divider"></div>
             <div class="card-body">
-                <p class="login-box-msg text-muted">Jelentkezzen be a rendszerbe</p>
+                <p class="login-box-msg">Bejelentkezés</p>
 
                 <div id="login-error" class="alert alert-danger d-none"></div>
 
                 <form id="login-form">
-                    <div class="input-group mb-3">
-                        <input type="email" id="login-email" class="form-control" placeholder="Email cím" required autofocus>
-                        <div class="input-group-append">
-                            <div class="input-group-text"><span class="fas fa-envelope"></span></div>
-                        </div>
+                    <div class="form-group-modern">
+                        <label for="login-email">Email cím</label>
+                        <input type="email" id="login-email" class="form-control" placeholder="nev@veresvill.hu" required autofocus>
                     </div>
-                    <div class="input-group mb-3">
+                    <div class="form-group-modern">
+                        <label for="login-password">Jelszó</label>
                         <input type="password" id="login-password" class="form-control" placeholder="Jelszó" required>
-                        <div class="input-group-append">
-                            <div class="input-group-text"><span class="fas fa-lock"></span></div>
-                        </div>
                     </div>
-                    <div class="row">
-                        <div class="col-12">
-                            <button type="submit" id="login-btn" class="btn btn-primary btn-block">
-                                <i class="fas fa-sign-in-alt mr-2"></i>Bejelentkezés
-                            </button>
-                        </div>
-                    </div>
+                    <button type="submit" id="login-btn" class="btn-login">
+                        Bejelentkezés
+                    </button>
                 </form>
             </div>
         </div>
         <div class="login-footer">
-            &copy; <span id="year"></span> VeresVill CRM
+            &copy; <span id="year"></span> VeresVill
         </div>
     </div>
 
@@ -157,7 +229,7 @@
 
         errorDiv.classList.add('d-none');
         btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Bejelentkezés...';
+        btn.innerHTML = 'Bejelentkezés...';
 
         try {
             const apiBase = window.location.pathname.replace(/\/admin\/.*$/, '/api');
@@ -182,7 +254,7 @@
             errorDiv.classList.remove('d-none');
         } finally {
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Bejelentkezés';
+            btn.innerHTML = 'Bejelentkezés';
         }
     });
     </script>
