@@ -342,6 +342,10 @@ async function showOrder(id) {
                         <button class="btn btn-primary btn-block mb-2" onclick="markDone(${o.id})">
                             <i class="fas fa-check mr-1"></i>Munka elvégezve
                         </button>` : ''}
+                        ${isAdmin ? `<hr>
+                        <button class="btn btn-outline-danger btn-block btn-sm" onclick="deleteOrder(${o.id})">
+                            <i class="fas fa-trash mr-1"></i>Megrendelés törlése
+                        </button>` : ''}
                     </div>
                 </div>
 
@@ -595,6 +599,19 @@ async function sendQuote(orderId) {
         VV.toast(res?.message || 'Hiba történt.', 'error');
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-paper-plane mr-1"></i>Árajánlat küldése emailben';
+    }
+}
+
+// Megrendelés törlése
+async function deleteOrder(orderId) {
+    if (!await VV.confirm('Biztosan törli ezt a megrendelést? Ez nem vonható vissza!')) return;
+    const res = await VV.del(`orders/${orderId}`);
+    if (res && res.success) {
+        VV.toast('Megrendelés törölve.', 'success');
+        hideOrderDetail();
+        loadOrders();
+    } else {
+        VV.toast(res?.message || 'Hiba történt.', 'error');
     }
 }
 

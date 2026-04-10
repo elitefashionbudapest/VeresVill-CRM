@@ -46,6 +46,7 @@ $routes = [
     ['GET',    'orders/(\d+)',                   'OrderController',        'show',            'auth'],
     ['PUT',    'orders/(\d+)',                   'OrderController',        'update',          'admin'],
     ['PUT',    'orders/(\d+)/status',            'OrderController',        'updateStatus',    'admin'],
+    ['DELETE', 'orders/(\d+)',                   'OrderController',        'destroy',         'admin'],
 
     // Quotes
     ['POST',   'orders/(\d+)/quote',            'QuoteController',        'sendQuote',       'admin'],

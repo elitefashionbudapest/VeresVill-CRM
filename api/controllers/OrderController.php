@@ -301,4 +301,27 @@ class OrderController {
             'status_label' => ORDER_STATUSES[$newStatus] ?? $newStatus,
         ], 'Státusz frissítve.');
     }
+
+    /**
+     * DELETE orders/{id}
+     * Megrendelés törlése (admin)
+     */
+    public function destroy(string $id): void {
+        $pdo = getDbConnection();
+        $id  = (int) $id;
+
+        $stmt = $pdo->prepare("SELECT id FROM vv_orders WHERE id = ?");
+        $stmt->execute([$id]);
+        if (!$stmt->fetch()) {
+            Response::error('Megrendelés nem található.', 404);
+        }
+
+        // Kapcsolódó adatok törlése (CASCADE-dal is menne, de legyen explicit)
+        $pdo->prepare("DELETE FROM vv_time_slots WHERE order_id = ?")->execute([$id]);
+        $pdo->prepare("DELETE FROM vv_calendar_events WHERE order_id = ?")->execute([$id]);
+        $pdo->prepare("DELETE FROM vv_order_status_log WHERE order_id = ?")->execute([$id]);
+        $pdo->prepare("DELETE FROM vv_orders WHERE id = ?")->execute([$id]);
+
+        Response::success(null, 'Megrendelés törölve.');
+    }
 }
