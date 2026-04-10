@@ -837,8 +837,121 @@ label {
 }
 
 /* ============================================
+   MOBILE BOTTOM TAB BAR
+   ============================================ */
+#mobile-tab-bar {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1040;
+    background: var(--vv-surface);
+    border-top: 1px solid var(--vv-border);
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
+    padding: 4px 0;
+    padding-bottom: max(4px, env(safe-area-inset-bottom));
+}
+
+#mobile-tab-bar .tab-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 0;
+    color: var(--vv-text-light);
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+}
+
+#mobile-tab-bar .tab-item i {
+    font-size: 20px;
+    margin-bottom: 2px;
+    transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+#mobile-tab-bar .tab-item.active {
+    color: var(--vv-blue);
+}
+
+#mobile-tab-bar .tab-item.active i {
+    transform: scale(1.15);
+}
+
+#mobile-tab-bar .tab-item:active {
+    transform: scale(0.9);
+}
+
+#mobile-tab-bar .tab-badge {
+    position: absolute;
+    top: 2px;
+    right: calc(50% - 18px);
+    background: var(--vv-danger);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    min-width: 16px;
+    height: 16px;
+    line-height: 16px;
+    text-align: center;
+    border-radius: 8px;
+    padding: 0 4px;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+/* ============================================
    MOBILE RESPONSIVE
    ============================================ */
+@media (max-width: 991px) {
+    /* Tab bar megjelenítés */
+    #mobile-tab-bar {
+        display: flex;
+    }
+
+    /* Sidebar elrejtése mobilon */
+    .main-sidebar {
+        display: none !important;
+    }
+
+    body.sidebar-open .main-sidebar {
+        display: block !important;
+    }
+
+    /* Content teljes szélességben */
+    .content-wrapper,
+    .main-header,
+    .main-footer {
+        margin-left: 0 !important;
+    }
+
+    /* Hamburger menü elrejtése */
+    [data-widget="pushmenu"] {
+        display: none !important;
+    }
+
+    /* Tartalom padding az alsó tab barhoz */
+    .content-wrapper {
+        padding-bottom: 70px !important;
+    }
+
+    /* Navbar egyszerűsítés */
+    .main-header.navbar {
+        min-height: 48px !important;
+    }
+
+    #navbar-title {
+        display: inline-block !important;
+        font-size: 16px !important;
+        font-weight: 700 !important;
+    }
+}
+
 @media (max-width: 768px) {
     .small-box .inner h3 {
         font-size: 1.4rem !important;
@@ -862,29 +975,6 @@ label {
 
     .btn {
         padding: 8px 14px !important;
-    }
-
-    .order-mobile-card {
-        background: var(--vv-surface);
-        border-radius: var(--vv-radius);
-        padding: 14px;
-        margin-bottom: 8px;
-        box-shadow: var(--vv-shadow-sm);
-        border-left: 3px solid var(--vv-blue);
-    }
-
-    .order-mobile-card .customer-name {
-        font-weight: 600;
-        font-size: 15px;
-    }
-
-    .order-mobile-card .order-meta {
-        color: var(--vv-text-muted);
-        font-size: 12px;
-    }
-
-    .main-header.navbar {
-        min-height: 48px !important;
     }
 
     .content-header {

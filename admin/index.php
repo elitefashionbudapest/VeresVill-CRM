@@ -121,13 +121,34 @@
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="main-footer text-sm">
+    <!-- Footer (csak desktop) -->
+    <footer class="main-footer text-sm d-none d-lg-block">
         <div class="float-right d-none d-sm-inline">
             VeresVill CRM v1.0
         </div>
         <strong>&copy; <span id="footer-year"></span> VeresVill</strong> - Villamos Felülvizsgálat
     </footer>
+
+    <!-- Mobile bottom tab bar -->
+    <nav id="mobile-tab-bar">
+        <a href="#" class="tab-item active" data-page="dashboard" onclick="navigateTo('dashboard'); return false;">
+            <i class="fas fa-th-large"></i>
+            <span>Főoldal</span>
+        </a>
+        <a href="#" class="tab-item" data-page="orders" onclick="navigateTo('orders'); return false;">
+            <i class="fas fa-bolt"></i>
+            <span>Rendelések</span>
+            <span class="tab-badge d-none" id="tab-orders-badge">0</span>
+        </a>
+        <a href="#" class="tab-item" data-page="calendar" onclick="navigateTo('calendar'); return false;">
+            <i class="far fa-calendar"></i>
+            <span>Naptár</span>
+        </a>
+        <a href="#" class="tab-item" data-page="settings" onclick="navigateTo('settings'); return false;">
+            <i class="fas fa-sliders-h"></i>
+            <span>Beállítások</span>
+        </a>
+    </nav>
 </div>
 
 <!-- jQuery -->
@@ -186,6 +207,11 @@ function navigateTo(page) {
     if (window.innerWidth < 992) {
         $('body').removeClass('sidebar-open').addClass('sidebar-collapse');
     }
+
+    // Mobile tab bar aktív állapot
+    document.querySelectorAll('#mobile-tab-bar .tab-item').forEach(el => el.classList.remove('active'));
+    const activeTab = document.querySelector(`#mobile-tab-bar .tab-item[data-page="${page}"]`);
+    if (activeTab) activeTab.classList.add('active');
 }
 
 // Hash-alapú navigáció

@@ -65,7 +65,12 @@ class GoogleCalendarController {
      */
     public function status(): void {
         $user = Auth::user();
-        $status = GoogleCalendarService::isConnected($user['id']);
+        try {
+            $status = GoogleCalendarService::isConnected($user['id']);
+        } catch (\Exception $e) {
+            // Tábla nem létezik még — nincs Google kapcsolat
+            $status = ['connected' => false, 'sync_enabled' => false, 'last_sync' => null, 'calendar_id' => 'primary'];
+        }
         Response::success($status);
     }
 

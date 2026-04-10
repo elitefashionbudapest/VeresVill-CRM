@@ -181,11 +181,12 @@ const VV = {
         return window.confirm(message);
     },
 
-    // Sidebar badge frissítés
+    // Sidebar + tab bar badge frissítés
     async updateSidebarBadges() {
         const data = await this.get('dashboard/stats');
         if (data && data.success) {
             const newCount = data.data.counts?.uj || 0;
+            // Sidebar badge
             const badge = document.getElementById('sidebar-orders-badge');
             if (badge) {
                 if (newCount > 0) {
@@ -193,6 +194,16 @@ const VV = {
                     badge.classList.remove('d-none');
                 } else {
                     badge.classList.add('d-none');
+                }
+            }
+            // Mobile tab bar badge
+            const tabBadge = document.getElementById('tab-orders-badge');
+            if (tabBadge) {
+                if (newCount > 0) {
+                    tabBadge.textContent = newCount;
+                    tabBadge.classList.remove('d-none');
+                } else {
+                    tabBadge.classList.add('d-none');
                 }
             }
         }
