@@ -229,7 +229,7 @@ class QuoteController {
 
         // Megrendelés lekérése token alapján
         $stmt = $pdo->prepare("
-            SELECT o.id, o.status, o.quote_token_expires
+            SELECT o.id, o.status, o.quote_token_expires, o.customer_name, o.customer_address
             FROM vv_orders o
             WHERE o.quote_token = ?
             LIMIT 1
@@ -301,7 +301,7 @@ class QuoteController {
             ]);
 
             // Naptár esemény létrehozása
-            $title = "Megrendelés #{$order['id']}";
+            $title = ($order['customer_name'] ?? '') . ' - ' . ($order['customer_address'] ?? '');
 
             $stmt = $pdo->prepare("
                 INSERT INTO vv_calendar_events (user_id, order_id, title, event_date, start_time, end_time, event_type)

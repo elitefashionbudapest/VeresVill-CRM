@@ -52,7 +52,7 @@ class CalendarController {
         $stmt->execute($params);
         $events = $stmt->fetchAll();
 
-        // FullCalendar formátum
+        // FullCalendar formátum — naptár események
         $calendarEvents = array_map(function ($event) {
             $colorMap = [
                 EVENT_APPOINTMENT => '#28a745',
@@ -75,6 +75,46 @@ class CalendarController {
                 ],
             ];
         }, $events);
+
+        // Felajánlott időpontok (time_slots) is megjelennek foglaltként
+        $slotWhere = ['ts.slot_date >= ? AND ts.slot_date <= ?'];
+        $slotParams = [$start, $end];
+
+        if ($user['role'] === ROLE_WORKER) {
+            $slotWhere[]  = 'ts.worker_id = ?';
+            $slotParams[] = $user['id'];
+        }
+
+        $slotWhereClause = 'WHERE ' . implode(' AND ', $slotWhere);
+
+        $stmt = $pdo->prepare("
+            SELECT ts.*, o.customer_name, o.customer_address, o.status as order_status
+            FROM vv_time_slots ts
+            JOIN vv_orders o ON ts.order_id = o.id
+            {$slotWhereClause}
+            ORDER BY ts.slot_date ASC, ts.slot_start ASC
+        ");
+        $stmt->execute($slotParams);
+        $timeSlots = $stmt->fetchAll();
+
+        foreach ($timeSlots as $ts) {
+            $isConfirmed = $ts['is_selected'] && in_array($ts['order_status'], [ORDER_STATUS_TIME_SELECTED, ORDER_STATUS_DONE]);
+            // Megerősített időpontok már calendar_events-ben vannak, ne duplázzuk
+            if ($isConfirmed) continue;
+
+            $calendarEvents[] = [
+                'id'    => 'slot_' . $ts['id'],
+                'title' => $ts['customer_name'] . ' (felajánlva)',
+                'start' => $ts['slot_date'] . 'T' . $ts['slot_start'],
+                'end'   => $ts['slot_date'] . 'T' . $ts['slot_end'],
+                'color' => '#ffc107', // sárga = felajánlott
+                'extendedProps' => [
+                    'order_id'   => (int) $ts['order_id'],
+                    'event_type' => 'pending_slot',
+                    'user_id'    => (int) $ts['worker_id'],
+                ],
+            ];
+        }
 
         Response::success($calendarEvents);
     }
@@ -257,7 +297,7 @@ class CalendarController {
             Response::error('Munkás nem található.', 404);
         }
 
-        // Foglalt időpontok
+        // Foglalt időpontok (naptár események)
         $stmt = $pdo->prepare("
             SELECT event_date, start_time, end_time
             FROM vv_calendar_events
@@ -266,6 +306,17 @@ class CalendarController {
         ");
         $stmt->execute([$workerId, $dateFrom, $dateTo]);
         $busySlots = $stmt->fetchAll();
+
+        // Felajánlott időpontok (time_slots) is foglaltak
+        $stmt = $pdo->prepare("
+            SELECT slot_date as event_date, slot_start as start_time, slot_end as end_time
+            FROM vv_time_slots
+            WHERE worker_id = ? AND slot_date >= ? AND slot_date <= ?
+            ORDER BY slot_date ASC, slot_start ASC
+        ");
+        $stmt->execute([$workerId, $dateFrom, $dateTo]);
+        $pendingSlots = $stmt->fetchAll();
+        $busySlots = array_merge($busySlots, $pendingSlots);
 
         $workStartHour = 8;
         $workEndHour   = 17;
