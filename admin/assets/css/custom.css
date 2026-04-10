@@ -5,8 +5,10 @@
 /* ============================================
    ÁLTALÁNOS
    ============================================ */
-body {
-    font-family: 'Inter', 'Source Sans Pro', sans-serif;
+body, .wrapper, .content-wrapper, .main-sidebar, .main-header,
+.card, .table, .form-control, .btn, .modal, .nav-sidebar .nav-link,
+.small-box, .info-box, .dropdown-menu, .badge, input, select, textarea, button {
+    font-family: 'Inter', sans-serif !important;
 }
 
 .content-wrapper {
