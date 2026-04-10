@@ -206,9 +206,9 @@
 
             if (!isAvailable) {
                 return `
-                    <div class="slot-btn" style="opacity:0.4;cursor:not-allowed;background:#f5f5f5;border-color:#ddd;">
-                        <span class="slot-icon" style="color:#ccc;">&#128197;</span>${startTime} - ${endTime}
-                        <span class="slot-date">${dateStr} (${dayName}) — <strong style="color:#e57373;">Már foglalt</strong></span>
+                    <div class="slot-btn" style="cursor:default;background:#fff3f3;border-color:#ffcdd2;">
+                        <span style="color:#e57373;font-weight:700;">&#10005; Ezt az időpontot időközben lefoglalták</span>
+                        <span class="slot-date" style="text-decoration:line-through;color:#bbb;">${dateStr} (${dayName}) ${startTime} - ${endTime}</span>
                     </div>
                 `;
             }
