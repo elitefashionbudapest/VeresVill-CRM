@@ -86,6 +86,12 @@ class MailService
         string $textBody,
         ?string $replyTo = null
     ): bool {
+        // Teszt módban nem küld emailt
+        if (env('APP_DEBUG') === 'true') {
+            error_log("MailService [TEST MODE - nem küldve]: To={$to}, Subject={$subject}");
+            return true;
+        }
+
         try {
             $mail = new PHPMailer(true);
             $mail->CharSet = 'UTF-8';
