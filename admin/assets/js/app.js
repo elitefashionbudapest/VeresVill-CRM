@@ -208,11 +208,21 @@ const VV = {
         try {
             const res = await fetch('pages/' + page + '.php');
             if (res.ok) {
-                content.innerHTML = await res.text();
-                // Oldal-specifikus JS inicializálás
-                if (window['init_' + page]) {
-                    window['init_' + page]();
-                }
+                const html = await res.text();
+                content.innerHTML = html;
+
+                // innerHTML-lel beszúrt <script> tagok nem futnak le
+                // Ezért kézzel kell létrehozni és végrehajtani őket
+                const scripts = content.querySelectorAll('script');
+                scripts.forEach(oldScript => {
+                    const newScript = document.createElement('script');
+                    if (oldScript.src) {
+                        newScript.src = oldScript.src;
+                    } else {
+                        newScript.textContent = oldScript.textContent;
+                    }
+                    oldScript.parentNode.replaceChild(newScript, oldScript);
+                });
             } else {
                 content.innerHTML = '<div class="alert alert-danger m-3">Az oldal nem található.</div>';
             }
