@@ -1,0 +1,22 @@
+# Környezeti változók (SOHA ne pushold!)
+.env
+
+# IDE / editor
+.claude/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+Thumbs.db
+.DS_Store
+
+# OS
+desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Terv fájlok
+.planning/

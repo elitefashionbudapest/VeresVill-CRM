@@ -1,0 +1,223 @@
+/* Veresvill Cookie Consent Banner */
+#cc-banner {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 99999;
+    background: #1a2332;
+    color: #e0e6ed;
+    box-shadow: 0 -4px 30px rgba(0,0,0,0.3);
+    font-family: 'Google Sans Flex', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    animation: ccSlideUp 0.4s ease-out;
+}
+#cc-banner.cc-hidden {
+    animation: ccSlideDown 0.4s ease-in forwards;
+}
+@keyframes ccSlideUp {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+@keyframes ccSlideDown {
+    from { transform: translateY(0); opacity: 1; }
+    to { transform: translateY(100%); opacity: 0; }
+}
+
+#cc-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 30px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+#cc-text {
+    flex: 1;
+    min-width: 280px;
+}
+#cc-text strong {
+    font-size: 16px;
+    color: #fff;
+    display: block;
+    margin-bottom: 6px;
+}
+#cc-text p {
+    margin: 0;
+    font-size: 13px;
+    color: #a0aec0;
+    line-height: 1.6;
+}
+#cc-buttons {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+#cc-buttons button {
+    border: none;
+    padding: 10px 22px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    font-family: inherit;
+}
+#cc-accept-btn {
+    background: #4A90E2;
+    color: #fff;
+}
+#cc-accept-btn:hover {
+    background: #357ABD;
+    transform: translateY(-1px);
+}
+#cc-reject-btn {
+    background: transparent;
+    color: #a0aec0;
+    border: 1px solid #3a4a5c !important;
+}
+#cc-reject-btn:hover {
+    background: #2a3a4c;
+    color: #fff;
+}
+#cc-settings-btn {
+    background: transparent;
+    color: #a0aec0;
+    border: 1px solid #3a4a5c !important;
+}
+#cc-settings-btn:hover {
+    background: #2a3a4c;
+    color: #fff;
+}
+
+/* Settings panel */
+#cc-settings {
+    border-top: 1px solid #2a3a4c;
+}
+#cc-settings-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 30px;
+}
+.cc-cat {
+    padding: 14px 0;
+    border-bottom: 1px solid #2a3a4c;
+}
+.cc-cat:last-of-type {
+    border-bottom: none;
+}
+.cc-cat-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+.cc-cat-title {
+    font-weight: 600;
+    color: #fff;
+    font-size: 14px;
+}
+.cc-always {
+    font-size: 12px;
+    color: #4CAF50;
+    font-weight: 600;
+    background: rgba(76,175,80,0.15);
+    padding: 3px 10px;
+    border-radius: 12px;
+}
+.cc-cat-desc {
+    margin: 6px 0 0;
+    font-size: 12px;
+    color: #7a8a9c;
+    line-height: 1.5;
+}
+
+/* Toggle switch */
+.cc-toggle {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+}
+.cc-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.cc-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #3a4a5c;
+    border-radius: 24px;
+    transition: 0.3s;
+}
+.cc-slider::before {
+    content: '';
+    position: absolute;
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: 0.3s;
+}
+.cc-toggle input:checked + .cc-slider {
+    background: #4A90E2;
+}
+.cc-toggle input:checked + .cc-slider::before {
+    transform: translateX(20px);
+}
+
+#cc-settings-buttons {
+    padding-top: 16px;
+    text-align: right;
+}
+#cc-save-btn {
+    background: #4A90E2;
+    color: #fff;
+    border: none;
+    padding: 10px 28px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+#cc-save-btn:hover {
+    background: #357ABD;
+    transform: translateY(-1px);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    #cc-inner {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 16px 20px;
+        gap: 16px;
+    }
+    #cc-text {
+        min-width: auto;
+    }
+    #cc-buttons {
+        flex-direction: column;
+    }
+    #cc-buttons button {
+        width: 100%;
+        text-align: center;
+    }
+    #cc-settings-inner {
+        padding: 16px 20px;
+    }
+}
