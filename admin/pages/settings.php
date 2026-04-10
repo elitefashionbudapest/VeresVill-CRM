@@ -67,32 +67,7 @@
                     <div id="gcal-sync-result" style="display:none;" class="mt-3"></div>
                 </div>
 
-                <!-- Beállítási útmutató -->
-                <div id="gcal-setup-guide" style="display:none;">
-                    <hr>
-                    <h5 style="font-size:14px;font-weight:700;color:#1E293B;margin-bottom:12px;">
-                        <i class="fas fa-info-circle text-primary mr-1"></i>Beállítási útmutató
-                    </h5>
-                    <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:16px;font-size:13px;line-height:1.8;color:#475569;">
-                        <ol style="padding-left:20px;margin:0;">
-                            <li>Menj a <a href="https://console.cloud.google.com/" target="_blank" style="color:#3B82F6;font-weight:600;">Google Cloud Console</a>-ba</li>
-                            <li>Hozz létre egy új projektet (pl. "VeresVill CRM")</li>
-                            <li>Engedélyezd a <strong>Google Calendar API</strong>-t (APIs &amp; Services &rarr; Enable APIs)</li>
-                            <li>Menj az <strong>OAuth consent screen</strong>-re, válaszd az "External" típust, töltsd ki a nevet</li>
-                            <li>Menj a <strong>Credentials</strong>-re &rarr; Create Credentials &rarr; <strong>OAuth 2.0 Client ID</strong></li>
-                            <li>Típus: <strong>Web application</strong></li>
-                            <li>Authorized redirect URI: <code id="gcal-redirect-uri"></code>
-                                <button class="btn btn-sm btn-outline-primary ml-1" onclick="copyRedirectUri()" title="Másolás"><i class="fas fa-copy"></i></button>
-                            </li>
-                            <li>Másold ki a <strong>Client ID</strong> és <strong>Client Secret</strong> értékeket</li>
-                            <li>Írd be a szerver <strong>.env</strong> fájljába:
-                                <pre style="background:#1E293B;color:#E2E8F0;padding:10px;border-radius:6px;margin:6px 0;font-size:12px;">GOOGLE_CLIENT_ID=ide_a_client_id
-GOOGLE_CLIENT_SECRET=ide_a_secret</pre>
-                            </li>
-                            <li>Kattints a "Google Naptár csatlakoztatása" gombra fent</li>
-                        </ol>
-                    </div>
-                </div>
+                <div id="gcal-setup-guide" style="display:none;"></div>
             </div>
         </div>
 
