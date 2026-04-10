@@ -202,6 +202,16 @@
             const startTime = s.slot_start.substring(0, 5);
             const endTime = s.slot_end.substring(0, 5);
             const isSelected = s.id === selectedSlotId;
+            const isAvailable = s.is_available !== false;
+
+            if (!isAvailable) {
+                return `
+                    <div class="slot-btn" style="opacity:0.4;cursor:not-allowed;background:#f5f5f5;border-color:#ddd;">
+                        <span class="slot-icon" style="color:#ccc;">&#128197;</span>${startTime} - ${endTime}
+                        <span class="slot-date">${dateStr} (${dayName}) — <strong style="color:#e57373;">Már foglalt</strong></span>
+                    </div>
+                `;
+            }
 
             return `
                 <button class="slot-btn ${isSelected ? 'selected' : ''}" onclick="selectSlot(${s.id}, this)">

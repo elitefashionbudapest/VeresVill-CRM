@@ -199,7 +199,32 @@ class QuoteController {
             ORDER BY ts.slot_date ASC, ts.slot_start ASC
         ");
         $stmt->execute([$order['id']]);
-        $order['time_slots'] = $stmt->fetchAll();
+        $timeSlots = $stmt->fetchAll();
+
+        // Ellenőrizzük, hogy az egyes slotok még szabadak-e
+        foreach ($timeSlots as &$ts) {
+            // Naptár események ütközés
+            $checkStmt = $pdo->prepare("
+                SELECT COUNT(*) as cnt FROM vv_calendar_events
+                WHERE user_id = ? AND event_date = ? AND start_time < ? AND end_time > ?
+            ");
+            $checkStmt->execute([$ts['worker_id'] ?? 0, $ts['slot_date'], $ts['slot_end'], $ts['slot_start']]);
+            $calConflict = (int) $checkStmt->fetch()['cnt'] > 0;
+
+            // Másik megrendelés elfogadott slotja ütközik
+            $checkStmt = $pdo->prepare("
+                SELECT COUNT(*) as cnt FROM vv_time_slots
+                WHERE worker_id = ? AND slot_date = ? AND slot_start < ? AND slot_end > ?
+                AND is_selected = 1 AND order_id != ?
+            ");
+            $checkStmt->execute([$ts['worker_id'] ?? 0, $ts['slot_date'], $ts['slot_end'], $ts['slot_start'], $order['id']]);
+            $slotConflict = (int) $checkStmt->fetch()['cnt'] > 0;
+
+            $ts['is_available'] = !$calConflict && !$slotConflict;
+        }
+        unset($ts);
+
+        $order['time_slots'] = $timeSlots;
 
         // Már elfogadott-e
         $order['is_accepted'] = in_array($order['status'], [
@@ -264,6 +289,27 @@ class QuoteController {
 
         if (!$slot) {
             Response::error('A kiválasztott időpont nem tartozik ehhez a megrendeléshez.', 422);
+        }
+
+        // Ütközés ellenőrzés: van-e már megerősített esemény erre az időpontra
+        $stmt = $pdo->prepare("
+            SELECT COUNT(*) as cnt FROM vv_calendar_events
+            WHERE user_id = ? AND event_date = ? AND start_time < ? AND end_time > ?
+        ");
+        $stmt->execute([$slot['worker_id'], $slot['slot_date'], $slot['slot_end'], $slot['slot_start']]);
+        if ((int) $stmt->fetch()['cnt'] > 0) {
+            Response::error('Sajnáljuk, ezt az időpontot már egy másik megrendelő lefoglalta. Kérjük, válasszon másik időpontot!', 409);
+        }
+
+        // Ellenőrzés: másik megrendelés time_slot-ja is foglalhatja
+        $stmt = $pdo->prepare("
+            SELECT COUNT(*) as cnt FROM vv_time_slots
+            WHERE worker_id = ? AND slot_date = ? AND slot_start < ? AND slot_end > ?
+            AND is_selected = 1 AND order_id != ?
+        ");
+        $stmt->execute([$slot['worker_id'], $slot['slot_date'], $slot['slot_end'], $slot['slot_start'], $order['id']]);
+        if ((int) $stmt->fetch()['cnt'] > 0) {
+            Response::error('Sajnáljuk, ezt az időpontot már egy másik megrendelő lefoglalta. Kérjük, válasszon másik időpontot!', 409);
         }
 
         $pdo->beginTransaction();
