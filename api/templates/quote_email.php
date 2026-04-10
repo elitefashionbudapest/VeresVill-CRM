@@ -1,21 +1,10 @@
 <?php
 /**
- * Arajanlat email sablon
- *
- * Azonos stilus a send_mail.php sablonjaival:
- * - Header: logo + kek gradient (#4A90E2 -> #357ABD)
- * - Font: Segoe UI
- * - Footer: sotet hatter (#2C3E50)
+ * Árajánlat email sablon
  */
 
 /**
- * Arajanlat email HTML verzio
- *
- * @param array  $order  Megrendeles adatai
- * @param int    $amount Brutto osszeg forintban
- * @param array  $slots  Valaszthato idopontok [{id, start_time, end_time}, ...]
- * @param string $token  Arajanlat token
- * @return string HTML
+ * Árajánlat email HTML verzió
  */
 function getQuoteEmailHtml(array $order, int $amount, array $slots, string $token): string
 {
@@ -24,7 +13,7 @@ function getQuoteEmailHtml(array $order, int $amount, array $slots, string $toke
     $propertyLabel = htmlspecialchars($order['property_type_label'] ?? $order['property_type'] ?? '');
     $size = htmlspecialchars($order['size'] ?? '');
 
-    // Kedvezményes ár: a beírt összeg = -10%-os ár, eredeti = összeg / 0.9
+    // Kedvezményes ár: a beírt összeg = -10%-os ár
     $originalAmount = (int) ceil($amount / 0.9 / 1000) * 1000;
     $formattedAmount = number_format($amount, 0, ',', '.');
     $formattedOriginal = number_format($originalAmount, 0, ',', '.');
@@ -32,25 +21,22 @@ function getQuoteEmailHtml(array $order, int $amount, array $slots, string $toke
 
     $appUrl = rtrim(env('APP_URL', 'https://veresvill.hu'), '/');
 
-    // Idopont gombok generalasa
+    $dayNames = ['vasárnap', 'hétfő', 'kedd', 'szerda', 'csütörtök', 'péntek', 'szombat'];
+    $monthNames = [
+        1 => 'január', 2 => 'február', 3 => 'március', 4 => 'április',
+        5 => 'május', 6 => 'június', 7 => 'július', 8 => 'augusztus',
+        9 => 'szeptember', 10 => 'október', 11 => 'november', 12 => 'december',
+    ];
+
+    // Időpont gombok generálása
     $slotButtons = '';
     foreach ($slots as $slot) {
         $startDt = new DateTime($slot['start_time']);
         $endDt = new DateTime($slot['end_time']);
 
-        // Magyar napnev
-        $dayNames = ['vasarnap', 'hetfo', 'kedd', 'szerda', 'csutortok', 'pentek', 'szombat'];
         $dayName = $dayNames[(int)$startDt->format('w')];
-
-        $dateStr = $startDt->format('Y. F j.') . ' (' . $dayName . ')';
-        // Honap neveket magyarra csereljuk
-        $dateStr = str_replace(
-            ['January', 'February', 'March', 'April', 'May', 'June',
-             'July', 'August', 'September', 'October', 'November', 'December'],
-            ['januar', 'februar', 'marcius', 'aprilis', 'majus', 'junius',
-             'julius', 'augusztus', 'szeptember', 'oktober', 'november', 'december'],
-            $dateStr
-        );
+        $monthName = $monthNames[(int)$startDt->format('n')];
+        $dateStr = $startDt->format('Y') . '. ' . $monthName . ' ' . $startDt->format('j') . '. (' . $dayName . ')';
         $timeStr = $startDt->format('H:i') . ' - ' . $endDt->format('H:i');
 
         $slotUrl = htmlspecialchars("{$appUrl}/public/quote.php?token={$token}&slot={$slot['id']}");
@@ -85,43 +71,45 @@ SLOT;
     <!-- Header -->
     <tr>
         <td style="background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%); padding: 35px 40px; text-align: center;">
-            <img src="https://veresvill.hu/veresvill_logo.webp" alt="VeresvVill" style="max-width: 200px; height: auto; margin-bottom: 10px;">
-            <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0; font-size: 14px;">Villamos Biztonsagi Felulvizsgalat</p>
+            <div style="background: #FFFFFF; display: inline-block; padding: 8px 20px; border-radius: 10px; margin-bottom: 10px;">
+                <img src="https://veresvill.hu/veresvill_logo.webp" alt="VeresVill" style="max-width: 180px; height: auto;">
+            </div>
+            <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0; font-size: 14px;">Villamos Biztonsági Felülvizsgálat</p>
         </td>
     </tr>
 
-    <!-- Udvozles -->
+    <!-- Üdvözlés -->
     <tr>
         <td style="padding: 35px 40px 20px;">
             <h2 style="color: #2C3E50; font-size: 24px; margin: 0 0 15px;">Tisztelt {$firstName}!</h2>
             <p style="color: #5A6C7D; font-size: 16px; line-height: 1.7; margin: 0;">
-                Koszonjuk megrendeleset! Az On arajanlata elkeszult.
+                Köszönjük megrendelését! Az Ön árajánlata elkészült.
             </p>
         </td>
     </tr>
 
-    <!-- Ingatlan osszefoglalo -->
+    <!-- Ingatlan összefoglaló -->
     <tr>
         <td style="padding: 0 40px 25px;">
             <h3 style="color: #4A90E2; font-size: 18px; margin: 0 0 15px; border-bottom: 3px solid #E8F4FD; padding-bottom: 10px;">Ingatlan adatai</h3>
             <table width="100%" cellpadding="0" cellspacing="0" style="border: 1px solid #E8F4FD; border-radius: 10px; overflow: hidden;">
                 <tr style="background: #F8FAFB;">
-                    <td style="padding: 12px 20px; font-weight: 600; color: #5A6C7D; border-bottom: 1px solid #E8F4FD; width: 160px;">Cim</td>
+                    <td style="padding: 12px 20px; font-weight: 600; color: #5A6C7D; border-bottom: 1px solid #E8F4FD; width: 160px;">Cím</td>
                     <td style="padding: 12px 20px; color: #2C3E50; border-bottom: 1px solid #E8F4FD;">{$address}</td>
                 </tr>
                 <tr>
-                    <td style="padding: 12px 20px; font-weight: 600; color: #5A6C7D; border-bottom: 1px solid #E8F4FD;">Ingatlan tipus</td>
+                    <td style="padding: 12px 20px; font-weight: 600; color: #5A6C7D; border-bottom: 1px solid #E8F4FD;">Ingatlan típus</td>
                     <td style="padding: 12px 20px; color: #2C3E50; border-bottom: 1px solid #E8F4FD;">{$propertyLabel}</td>
                 </tr>
                 <tr style="background: #F8FAFB;">
-                    <td style="padding: 12px 20px; font-weight: 600; color: #5A6C7D;">Meret</td>
-                    <td style="padding: 12px 20px; color: #2C3E50;">{$size} m2</td>
+                    <td style="padding: 12px 20px; font-weight: 600; color: #5A6C7D;">Méret</td>
+                    <td style="padding: 12px 20px; color: #2C3E50;">{$size} m²</td>
                 </tr>
             </table>
         </td>
     </tr>
 
-    <!-- Osszeg -->
+    <!-- Összeg -->
     <tr>
         <td style="padding: 0 40px 25px;">
             <table width="100%" cellpadding="0" cellspacing="0">
@@ -129,33 +117,33 @@ SLOT;
                     <td style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); padding: 25px; border-radius: 12px; text-align: center;">
                         <p style="color: rgba(255,255,255,0.7); margin: 0 0 4px; font-size: 14px;"><span style="text-decoration: line-through;">{$formattedOriginal} Ft</span></p>
                         <p style="color: #FFFFFF; margin: 0; font-size: 36px; font-weight: 800;">{$formattedAmount} Ft</p>
-                        <p style="color: #FFD54F; margin: 8px 0 0; font-size: 15px; font-weight: 700;">-10% kedvezmeny (megtakaritas: {$savings} Ft)</p>
-                        <p style="color: rgba(255,255,255,0.7); margin: 6px 0 0; font-size: 12px;">Brutto ar, tartalmazza az AFA-t</p>
+                        <p style="color: #FFD54F; margin: 8px 0 0; font-size: 15px; font-weight: 700;">-10% kedvezmény (megtakarítás: {$savings} Ft)</p>
+                        <p style="color: rgba(255,255,255,0.7); margin: 6px 0 0; font-size: 12px;">Bruttó ár, tartalmazza az ÁFÁ-t</p>
                     </td>
                 </tr>
             </table>
         </td>
     </tr>
 
-    <!-- Idopont valasztas -->
+    <!-- Időpont választás -->
     <tr>
         <td style="padding: 0 40px 30px;">
-            <h3 style="color: #4A90E2; font-size: 18px; margin: 0 0 5px;">Valasszon idopontot:</h3>
-            <p style="color: #5A6C7D; font-size: 14px; margin: 0 0 15px;">Kattintson a kivalasztott idopontra a megerositeshez.</p>
+            <h3 style="color: #4A90E2; font-size: 18px; margin: 0 0 5px;">Válasszon időpontot:</h3>
+            <p style="color: #5A6C7D; font-size: 14px; margin: 0 0 15px;">Kattintson a kiválasztott időpontra a megerősítéshez.</p>
             <table width="100%" cellpadding="0" cellspacing="0">
                 {$slotButtons}
             </table>
         </td>
     </tr>
 
-    <!-- Megjegyzes -->
+    <!-- Megjegyzés -->
     <tr>
         <td style="padding: 0 40px 30px;">
             <table width="100%" cellpadding="0" cellspacing="0" style="background: #FFF9E6; border: 1px solid #FFE082; border-radius: 10px;">
                 <tr>
                     <td style="padding: 15px 20px; color: #5A6C7D; font-size: 14px; line-height: 1.6;">
-                        <strong style="color: #F57F17;">Az arajanlat 7 napig ervenyes.</strong><br>
-                        Az idopont kivalasztasa utan kollegank felveszi Onnel a kapcsolatot a reszletek egyeztetesehez.
+                        <strong style="color: #F57F17;">Az árajánlat 7 napig érvényes.</strong><br>
+                        Az időpont kiválasztása után kollégánk felveszi Önnel a kapcsolatot a részletek egyeztetéséhez.
                     </td>
                 </tr>
             </table>
@@ -165,7 +153,7 @@ SLOT;
     <!-- Kapcsolat -->
     <tr>
         <td style="padding: 0 40px 30px; text-align: center;">
-            <p style="color: #5A6C7D; font-size: 14px; margin: 0 0 10px;">Kerdese van? Irjon nekunk batran:</p>
+            <p style="color: #5A6C7D; font-size: 14px; margin: 0 0 10px;">Kérdése van? Írjon nekünk bátran:</p>
             <a href="mailto:veresvill.ads@gmail.com" style="color: #4A90E2; font-weight: 600; text-decoration: none; font-size: 16px;">veresvill.ads@gmail.com</a>
         </td>
     </tr>
@@ -173,9 +161,11 @@ SLOT;
     <!-- Footer -->
     <tr>
         <td style="background: #2C3E50; padding: 25px 40px; text-align: center;">
-            <img src="https://veresvill.hu/veresvill_logo.webp" alt="VeresvVill" style="max-width: 120px; height: auto; margin-bottom: 8px;">
-            <p style="color: rgba(255,255,255,0.6); margin: 0; font-size: 12px;">Villamos Biztonsagi Felulvizsgalat - Budapest es Pest megye</p>
-            <p style="color: rgba(255,255,255,0.4); margin: 10px 0 0; font-size: 11px;">Ez egy automatikus ertesites.</p>
+            <div style="background: #FFFFFF; display: inline-block; padding: 6px 14px; border-radius: 8px; margin-bottom: 8px;">
+                <img src="https://veresvill.hu/veresvill_logo.webp" alt="VeresVill" style="max-width: 100px; height: auto;">
+            </div>
+            <p style="color: rgba(255,255,255,0.6); margin: 0; font-size: 12px;">Villamos Biztonsági Felülvizsgálat - Budapest és Pest megye</p>
+            <p style="color: rgba(255,255,255,0.4); margin: 10px 0 0; font-size: 11px;">Ez egy automatikus értesítés.</p>
         </td>
     </tr>
 
@@ -188,7 +178,7 @@ HTML;
 }
 
 /**
- * Arajanlat email szoveges (plain text) verzio
+ * Árajánlat email szöveges verzió
  */
 function getQuoteEmailText(array $order, int $amount, array $slots, string $token): string
 {
@@ -203,23 +193,23 @@ function getQuoteEmailText(array $order, int $amount, array $slots, string $toke
 
     $appUrl = rtrim(env('APP_URL', 'https://veresvill.hu'), '/');
 
-    $text = "Tisztelt {$firstName}!\n\n";
-    $text .= "Koszonjuk megrendeleset! Az On arajanlata elkeszult.\n\n";
-    $text .= "INGATLAN ADATAI:\n";
-    $text .= "Cim: {$address}\n";
-    $text .= "Tipus: {$propertyLabel}\n";
-    $text .= "Meret: {$size} m2\n\n";
-    $text .= "EREDETI AR: {$formattedOriginal} Ft\n";
-    $text .= "KEDVEZMENYES AR: {$formattedAmount} Ft (-10%)\n";
-    $text .= "(Brutto ar, tartalmazza az AFA-t)\n\n";
-    $text .= "VALASSZON IDOPONTOT:\n";
-
-    $dayNames = ['vasarnap', 'hetfo', 'kedd', 'szerda', 'csutortok', 'pentek', 'szombat'];
+    $dayNames = ['vasárnap', 'hétfő', 'kedd', 'szerda', 'csütörtök', 'péntek', 'szombat'];
     $monthNames = [
-        1 => 'januar', 2 => 'februar', 3 => 'marcius', 4 => 'aprilis',
-        5 => 'majus', 6 => 'junius', 7 => 'julius', 8 => 'augusztus',
-        9 => 'szeptember', 10 => 'oktober', 11 => 'november', 12 => 'december',
+        1 => 'január', 2 => 'február', 3 => 'március', 4 => 'április',
+        5 => 'május', 6 => 'június', 7 => 'július', 8 => 'augusztus',
+        9 => 'szeptember', 10 => 'október', 11 => 'november', 12 => 'december',
     ];
+
+    $text = "Tisztelt {$firstName}!\n\n";
+    $text .= "Köszönjük megrendelését! Az Ön árajánlata elkészült.\n\n";
+    $text .= "INGATLAN ADATAI:\n";
+    $text .= "Cím: {$address}\n";
+    $text .= "Típus: {$propertyLabel}\n";
+    $text .= "Méret: {$size} m²\n\n";
+    $text .= "EREDETI ÁR: {$formattedOriginal} Ft\n";
+    $text .= "KEDVEZMÉNYES ÁR: {$formattedAmount} Ft (-10%)\n";
+    $text .= "(Bruttó ár, tartalmazza az ÁFÁ-t)\n\n";
+    $text .= "VÁLASSZON IDŐPONTOT:\n";
 
     foreach ($slots as $slot) {
         $startDt = new DateTime($slot['start_time']);
@@ -234,9 +224,9 @@ function getQuoteEmailText(array $order, int $amount, array $slots, string $toke
         $text .= "\n  {$dateStr} {$timeStr}\n  Link: {$slotUrl}\n";
     }
 
-    $text .= "\nAz arajanlat 7 napig ervenyes.\n\n";
-    $text .= "Kerdese van? Irjon nekunk: veresvill.ads@gmail.com\n\n";
-    $text .= "Udvozlettel,\nVeresvill csapata";
+    $text .= "\nAz árajánlat 7 napig érvényes.\n\n";
+    $text .= "Kérdése van? Írjon nekünk: veresvill.ads@gmail.com\n\n";
+    $text .= "Üdvözlettel,\nVeresVill csapata";
 
     return $text;
 }
