@@ -2,8 +2,16 @@
  * VeresVill CRM - Globális API kliens és utility-k
  */
 const VV = {
-    // API base URL (relatív)
-    apiBase: '../api',
+    // API base URL (az admin/index.php-ből nézve)
+    apiBase: (function() {
+        // Az aktuális oldal URL-jéből kiszámoljuk az API útvonalat
+        const path = window.location.pathname;
+        const adminPos = path.indexOf('/admin/');
+        if (adminPos !== -1) {
+            return path.substring(0, adminPos) + '/api';
+        }
+        return '../api';
+    })(),
 
     // ============================================
     // AUTH

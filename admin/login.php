@@ -160,7 +160,8 @@
         btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Bejelentkezés...';
 
         try {
-            const res = await fetch('../api/auth/login', {
+            const apiBase = window.location.pathname.replace(/\/admin\/.*$/, '/api');
+            const res = await fetch(apiBase + '/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password })
