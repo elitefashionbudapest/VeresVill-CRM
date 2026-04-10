@@ -69,7 +69,7 @@ class QuoteController {
             // Megrendelés frissítése
             $stmt = $pdo->prepare("
                 UPDATE vv_orders
-                SET status = ?, quote_amount = ?, quote_token = ?, quote_expires_at = ?, updated_at = NOW()
+                SET status = ?, quote_amount = ?, quote_token = ?, quote_token_expires = ?, updated_at = NOW()
                 WHERE id = ?
             ");
             $stmt->execute([ORDER_STATUS_QUOTE_SENT, $amount, $quoteToken, $expiresAt, $orderId]);
@@ -80,7 +80,7 @@ class QuoteController {
 
             // Új slot-ok mentése
             $stmt = $pdo->prepare("
-                INSERT INTO vv_time_slots (order_id, worker_id, date, start_time, end_time)
+                INSERT INTO vv_time_slots (order_id, worker_id, slot_date, slot_start, slot_end)
                 VALUES (?, ?, ?, ?, ?)
             ");
             foreach ($slots as $slot) {
@@ -143,8 +143,8 @@ class QuoteController {
                 o.urgency,
                 o.status,
                 o.quote_amount,
-                o.quote_expires_at,
-                o.description
+                o.quote_token_expires,
+                o.message
             FROM vv_orders o
             WHERE o.quote_token = ?
             LIMIT 1
@@ -157,7 +157,7 @@ class QuoteController {
         }
 
         // Lejárat ellenőrzés
-        if (strtotime($order['quote_expires_at']) < time()) {
+        if (strtotime($order['quote_token_expires']) < time()) {
             Response::error('Az árajánlat lejárt.', 410);
         }
 
@@ -168,11 +168,11 @@ class QuoteController {
 
         // Időpontok
         $stmt = $pdo->prepare("
-            SELECT ts.id, ts.date, ts.start_time, ts.end_time, ts.is_selected, u.name as worker_name
+            SELECT ts.id, ts.slot_date, ts.slot_start, ts.slot_end, ts.is_selected, u.name as worker_name
             FROM vv_time_slots ts
             LEFT JOIN vv_users u ON ts.worker_id = u.id
             WHERE ts.order_id = ?
-            ORDER BY ts.date ASC, ts.start_time ASC
+            ORDER BY ts.slot_date ASC, ts.slot_start ASC
         ");
         $stmt->execute([$order['id']]);
         $order['time_slots'] = $stmt->fetchAll();
@@ -205,7 +205,7 @@ class QuoteController {
 
         // Megrendelés lekérése token alapján
         $stmt = $pdo->prepare("
-            SELECT o.id, o.status, o.quote_expires_at
+            SELECT o.id, o.status, o.quote_token_expires
             FROM vv_orders o
             WHERE o.quote_token = ?
             LIMIT 1
@@ -218,7 +218,7 @@ class QuoteController {
         }
 
         // Lejárat ellenőrzés
-        if (strtotime($order['quote_expires_at']) < time()) {
+        if (strtotime($order['quote_token_expires']) < time()) {
             Response::error('Az árajánlat lejárt.', 410);
         }
 
@@ -273,24 +273,23 @@ class QuoteController {
                 $order['id'],
                 $order['status'],
                 ORDER_STATUS_TIME_SELECTED,
-                "Ügyfél kiválasztotta az időpontot: {$slot['date']} {$slot['start_time']}-{$slot['end_time']}",
+                "Ügyfél kiválasztotta az időpontot: {$slot['slot_date']} {$slot['slot_start']}-{$slot['slot_end']}",
             ]);
 
             // Naptár esemény létrehozása
             $title = "Megrendelés #{$order['id']}";
-            $startDatetime = $slot['date'] . ' ' . $slot['start_time'];
-            $endDatetime   = $slot['date'] . ' ' . $slot['end_time'];
 
             $stmt = $pdo->prepare("
-                INSERT INTO vv_calendar_events (user_id, order_id, title, start_datetime, end_datetime, event_type)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO vv_calendar_events (user_id, order_id, title, event_date, start_time, end_time, event_type)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             ");
             $stmt->execute([
                 $slot['worker_id'],
                 $order['id'],
                 $title,
-                $startDatetime,
-                $endDatetime,
+                $slot['slot_date'],
+                $slot['slot_start'],
+                $slot['slot_end'],
                 EVENT_APPOINTMENT,
             ]);
 

@@ -178,7 +178,7 @@ class OrderController {
             FROM vv_time_slots ts
             LEFT JOIN vv_users u ON ts.worker_id = u.id
             WHERE ts.order_id = ?
-            ORDER BY ts.date ASC, ts.start_time ASC
+            ORDER BY ts.slot_date ASC, ts.slot_start ASC
         ");
         $stmt->execute([$id]);
         $order['time_slots'] = $stmt->fetchAll();
