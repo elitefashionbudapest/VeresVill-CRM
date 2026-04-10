@@ -843,7 +843,8 @@
             const submitBtn = form.querySelector('.submit-button');
             const originalText = submitBtn.textContent;
 
-            // reCAPTCHA ellenőrzés
+            // reCAPTCHA ellenőrzés (TESZT: kikapcsolva — élesítéskor visszakapcsolni!)
+            /*
             if (typeof grecaptcha === 'undefined' || !grecaptcha.getResponse) {
                 showFormError(submitBtn, originalText, 'A reCAPTCHA még töltődik, kérjük várjon pár másodpercet.');
                 return false;
@@ -853,6 +854,7 @@
                 showFormError(submitBtn, originalText, 'Kérjük, igazolja hogy nem robot!');
                 return false;
             }
+            */
 
             // Küldés állapot
             submitBtn.disabled = true;
