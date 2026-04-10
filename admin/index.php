@@ -202,6 +202,17 @@ handleHash();
 // Sidebar badge-ek frissítése 30 másodpercenként
 VV.updateSidebarBadges();
 setInterval(() => VV.updateSidebarBadges(), 30000);
+
+// Google Naptár automata szinkron 10 percenként
+setInterval(async () => {
+    try {
+        const status = await VV.get('google/status');
+        if (status && status.success && status.data.connected && status.data.sync_enabled) {
+            await VV.post('google/sync');
+            console.log('[Google Sync] Automata szinkron kész');
+        }
+    } catch(e) {}
+}, 600000); // 10 perc
 </script>
 </body>
 </html>

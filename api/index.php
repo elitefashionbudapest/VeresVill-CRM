@@ -71,6 +71,15 @@ $routes = [
 
     // Dashboard
     ['GET',    'dashboard/stats',               'DashboardController',    'stats',           'auth'],
+
+    // Google Calendar
+    ['GET',    'google/auth',                   'GoogleCalendarController', 'auth',           'auth'],
+    ['GET',    'google/callback',               'GoogleCalendarController', 'callback',       'none'],
+    ['GET',    'google/status',                 'GoogleCalendarController', 'status',         'auth'],
+    ['POST',   'google/disconnect',             'GoogleCalendarController', 'disconnect',     'auth'],
+    ['POST',   'google/sync',                   'GoogleCalendarController', 'sync',           'auth'],
+    ['POST',   'google/calendar-id',            'GoogleCalendarController', 'setCalendarId',  'auth'],
+    ['GET',    'google/calendars',              'GoogleCalendarController', 'listCalendars',  'auth'],
 ];
 
 // --- Route matching ---
