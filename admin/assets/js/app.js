@@ -212,16 +212,20 @@ const VV = {
                 content.innerHTML = html;
 
                 // innerHTML-lel beszúrt <script> tagok nem futnak le
-                // Ezért kézzel kell létrehozni és végrehajtani őket
+                // eval()-lal futtatjuk őket, hogy ne ütközzön a let/const deklaráció
                 const scripts = content.querySelectorAll('script');
                 scripts.forEach(oldScript => {
-                    const newScript = document.createElement('script');
                     if (oldScript.src) {
+                        const newScript = document.createElement('script');
                         newScript.src = oldScript.src;
+                        document.head.appendChild(newScript);
                     } else {
-                        newScript.textContent = oldScript.textContent;
+                        try {
+                            (0, eval)(oldScript.textContent);
+                        } catch (e) {
+                            console.error('Script hiba:', e);
+                        }
                     }
-                    oldScript.parentNode.replaceChild(newScript, oldScript);
                 });
             } else {
                 content.innerHTML = '<div class="alert alert-danger m-3">Az oldal nem található.</div>';

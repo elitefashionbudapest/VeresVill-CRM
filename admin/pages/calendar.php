@@ -83,7 +83,7 @@
 </div>
 
 <script>
-let calendar;
+var calendar;
 
 async function init_calendar() {
     const calendarEl = document.getElementById('calendar');

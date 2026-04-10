@@ -81,8 +81,8 @@
 </section>
 
 <script>
-let ordersPage = 1;
-const ordersPerPage = 20;
+var ordersPage = 1;
+var ordersPerPage = 20;
 
 async function init_orders() {
     // Szűrők eseménykezelő
@@ -384,9 +384,9 @@ function hideOrderDetail() {
 // ============================================
 // VIZUÁLIS IDŐPONT VÁLASZTÓ (Slot Picker)
 // ============================================
-let slotPickerWeekStart = null;
-let slotPickerSelected = []; // [{date, start, end}]
-let slotPickerBusy = [];     // foglalt időpontok az API-ból
+var slotPickerWeekStart = null;
+var slotPickerSelected = []; // [{date, start, end}]
+var slotPickerBusy = [];     // foglalt időpontok az API-ból
 
 const SLOT_HOURS = [8,9,10,11,12,13,14,15,16]; // 8:00-17:00
 const SLOT_DAY_NAMES = ['Hé','Ke','Sze','Csü','Pé','Szo','Va'];
