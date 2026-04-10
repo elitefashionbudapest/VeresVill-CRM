@@ -117,7 +117,7 @@ if ($envExists) {
             if ($adminCount > 0) {
                 echo "<p><span class='ok'>✓</span> Admin felhasználó létezik ({$adminCount} db)</p>";
             } else {
-                echo "<p><span class='err'>✗</span> Nincs admin felhasználó! Futtasd: <strong>php database/seed.php</strong></p>";
+                echo "<p><span class='err'>✗</span> Nincs admin felhasználó! <a href='install.php?seed=1' style='background:#4CAF50;color:#fff;padding:5px 15px;border-radius:6px;text-decoration:none;font-weight:bold;'>Admin létrehozása</a></p>";
                 $errors++;
             }
         }
@@ -130,7 +130,34 @@ if ($envExists) {
     echo "<p><span class='err'>✗</span> .env hiányzik, DB teszt kihagyva</p>";
 }
 
-// 8. Jogok javítása gomb
+// 8. Admin user létrehozás
+if (isset($_GET['seed'])) {
+    echo "<hr><h2>Admin felhasználó létrehozása</h2>";
+    try {
+        $adminEmail = 'admin@veresvill.hu';
+        $adminPass = 'VeresVill2026!';
+        $hash = password_hash($adminPass, PASSWORD_BCRYPT);
+        $check = $pdo->prepare("SELECT id FROM vv_users WHERE email = ?");
+        $check->execute([$adminEmail]);
+        if ($check->fetch()) {
+            echo "<p><span class='warn'>!</span> Admin már létezik ({$adminEmail})</p>";
+        } else {
+            $stmt = $pdo->prepare("INSERT INTO vv_users (name, email, password, role, is_active) VALUES (?, ?, ?, 'admin', 1)");
+            $stmt->execute(['Admin', $adminEmail, $hash]);
+            echo "<p><span class='ok'>✓</span> Admin létrehozva!</p>";
+            echo "<p><strong>Email:</strong> {$adminEmail}</p>";
+            echo "<p><strong>Jelszó:</strong> {$adminPass}</p>";
+            echo "<p style='color:#FF9800'>FONTOS: Változtasd meg a jelszót bejelentkezés után!</p>";
+        }
+    } catch (Exception $e) {
+        echo "<p><span class='err'>✗</span> Hiba: " . htmlspecialchars($e->getMessage()) . "</p>";
+    }
+    echo "<p><a href='install.php' style='color:#4A90E2'>Vissza az ellenőrzéshez</a></p>";
+    echo "</body></html>";
+    exit;
+}
+
+// 9. Jogok javítása gomb
 echo "<hr><h2>Automatikus javítás</h2>";
 if (isset($_GET['fix'])) {
     echo "<p>Jogok beállítása...</p>";
