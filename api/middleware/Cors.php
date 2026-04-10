@@ -8,8 +8,13 @@ class Cors {
         $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
         $appUrl = env('APP_URL', 'https://veresvill.hu');
 
+        // Origin = protocol + host (útvonal nélkül)
+        $parsed = parse_url($appUrl);
+        $appOrigin = ($parsed['scheme'] ?? 'https') . '://' . ($parsed['host'] ?? '');
+
         // Megengedett origin-ek
         $allowed = [
+            $appOrigin,
             $appUrl,
             rtrim($appUrl, '/'),
         ];
