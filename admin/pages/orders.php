@@ -259,34 +259,26 @@ async function showOrder(id) {
                     <div class="card-body">
                         <div class="form-group">
                             <label>Árajánlat összege (Ft)</label>
-                            <input type="number" id="quote-amount" class="form-control" placeholder="pl. 35000" min="1000" step="1000">
+                            <input type="number" id="quote-amount" class="form-control form-control-lg" placeholder="pl. 35000" min="1000" step="1000" style="font-size:1.4rem;font-weight:700;">
                             <small class="text-muted">Bruttó ár ÁFÁ-val</small>
                         </div>
-                        <div class="form-group">
-                            <label>Felajánlott időpontok (2-3 db)</label>
-                            <div id="quote-slots">
-                                <div class="slot-row mb-2">
-                                    <div class="row">
-                                        <div class="col-5">
-                                            <input type="date" class="form-control form-control-sm slot-date" min="${new Date().toISOString().split('T')[0]}">
-                                        </div>
-                                        <div class="col-3">
-                                            <input type="time" class="form-control form-control-sm slot-start" value="09:00" step="3600">
-                                        </div>
-                                        <div class="col-3">
-                                            <input type="time" class="form-control form-control-sm slot-end" value="10:00" step="3600">
-                                        </div>
-                                        <div class="col-1">
-                                            <button class="btn btn-sm btn-outline-danger" onclick="this.closest('.slot-row').remove()"><i class="fas fa-times"></i></button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <button class="btn btn-sm btn-outline-primary mt-1" onclick="addSlotRow()">
-                                <i class="fas fa-plus mr-1"></i>Időpont hozzáadása
-                            </button>
+
+                        <label class="mb-2">Válassz 2-3 szabad időpontot <small class="text-muted">(kattints a zöld cellákra)</small></label>
+
+                        <!-- Hét navigáció -->
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="slotPickerPrevWeek()"><i class="fas fa-chevron-left"></i></button>
+                            <strong id="slot-picker-week-label"></strong>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="slotPickerNextWeek()"><i class="fas fa-chevron-right"></i></button>
                         </div>
-                        <button class="btn btn-primary" onclick="sendQuote(${o.id})">
+
+                        <!-- Naptár rács -->
+                        <div id="slot-picker-grid" style="overflow-x:auto;"></div>
+
+                        <!-- Kiválasztott időpontok -->
+                        <div id="slot-picker-selected" class="mt-3"></div>
+
+                        <button class="btn btn-primary btn-lg btn-block mt-3" onclick="sendQuote(${o.id})" id="send-quote-btn" disabled>
                             <i class="fas fa-paper-plane mr-1"></i>Árajánlat küldése emailben
                         </button>
                     </div>
@@ -377,6 +369,11 @@ async function showOrder(id) {
             </div>
         </div>
     `;
+
+    // Slot picker inicializálás ha új megrendelés
+    if (o.status === 'uj' && isAdmin) {
+        setTimeout(() => initSlotPicker(), 100);
+    }
 }
 
 function hideOrderDetail() {
@@ -384,36 +381,185 @@ function hideOrderDetail() {
     document.getElementById('orders-list-view').style.display = '';
 }
 
-// Árajánlat slot hozzáadása
-function addSlotRow() {
-    const container = document.getElementById('quote-slots');
-    if (container.querySelectorAll('.slot-row').length >= 3) {
-        VV.toast('Maximum 3 időpont adható meg.', 'warning');
+// ============================================
+// VIZUÁLIS IDŐPONT VÁLASZTÓ (Slot Picker)
+// ============================================
+let slotPickerWeekStart = null;
+let slotPickerSelected = []; // [{date, start, end}]
+let slotPickerBusy = [];     // foglalt időpontok az API-ból
+
+const SLOT_HOURS = [8,9,10,11,12,13,14,15,16]; // 8:00-17:00
+const SLOT_DAY_NAMES = ['Hé','Ke','Sze','Csü','Pé','Szo','Va'];
+const SLOT_MAX = 3;
+
+function initSlotPicker() {
+    // Következő hétfő
+    const today = new Date();
+    slotPickerWeekStart = new Date(today);
+    const dayOfWeek = today.getDay();
+    const diff = dayOfWeek === 0 ? 1 : (dayOfWeek === 6 ? 2 : (dayOfWeek === 1 ? 0 : 0));
+    if (diff > 0) slotPickerWeekStart.setDate(today.getDate() + diff);
+    // Ha ma hétköznap, kezdjük mától
+    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+        slotPickerWeekStart = new Date(today);
+    }
+    slotPickerWeekStart.setHours(0,0,0,0);
+
+    slotPickerSelected = [];
+    renderSlotPicker();
+}
+
+function slotPickerPrevWeek() {
+    slotPickerWeekStart.setDate(slotPickerWeekStart.getDate() - 7);
+    const today = new Date(); today.setHours(0,0,0,0);
+    if (slotPickerWeekStart < today) slotPickerWeekStart = new Date(today);
+    renderSlotPicker();
+}
+
+function slotPickerNextWeek() {
+    slotPickerWeekStart.setDate(slotPickerWeekStart.getDate() + 7);
+    renderSlotPicker();
+}
+
+async function renderSlotPicker() {
+    const grid = document.getElementById('slot-picker-grid');
+    const label = document.getElementById('slot-picker-week-label');
+    if (!grid || !label) return;
+
+    // Hét napjainak kiszámítása (H-P, 5 nap)
+    const days = [];
+    const d = new Date(slotPickerWeekStart);
+    // Hétfőre igazítás
+    while (d.getDay() !== 1 && d.getDay() !== 0) d.setDate(d.getDate() - 1);
+    if (d.getDay() === 0) d.setDate(d.getDate() + 1);
+
+    for (let i = 0; i < 5; i++) {
+        days.push(new Date(d));
+        d.setDate(d.getDate() + 1);
+    }
+
+    // Hét label
+    const weekStart = days[0];
+    const weekEnd = days[4];
+    const months = ['jan','feb','már','ápr','máj','jún','júl','aug','sze','okt','nov','dec'];
+    label.textContent = `${months[weekStart.getMonth()]} ${weekStart.getDate()}. - ${months[weekEnd.getMonth()]} ${weekEnd.getDate()}.`;
+
+    // Foglalt időpontok betöltése
+    const user = VV.getUser();
+    const startStr = days[0].toISOString().split('T')[0];
+    const endStr = days[4].toISOString().split('T')[0];
+    const busyData = await VV.get(`calendar/events?start=${startStr}&end=${endStr}`);
+    slotPickerBusy = (busyData && busyData.success) ? busyData.data : [];
+
+    const now = new Date();
+
+    // Header
+    let html = '<table class="table table-bordered mb-0" style="table-layout:fixed;font-size:13px;"><thead><tr>';
+    html += '<th style="width:50px;text-align:center;background:#f8f9fa;"></th>';
+    days.forEach(day => {
+        const isToday = day.toDateString() === now.toDateString();
+        html += `<th style="text-align:center;background:${isToday ? '#e3f2fd' : '#f8f9fa'};padding:6px 2px;">
+            <div style="font-weight:700;font-size:12px;">${SLOT_DAY_NAMES[day.getDay()-1]}</div>
+            <div style="font-size:16px;font-weight:700;">${day.getDate()}</div>
+        </th>`;
+    });
+    html += '</tr></thead><tbody>';
+
+    // Sorok (órák)
+    SLOT_HOURS.forEach(hour => {
+        html += '<tr>';
+        html += `<td style="text-align:center;font-weight:600;color:#6c757d;padding:4px;vertical-align:middle;font-size:12px;">${hour}:00</td>`;
+
+        days.forEach(day => {
+            const dateStr = day.toISOString().split('T')[0];
+            const startStr = `${String(hour).padStart(2,'0')}:00`;
+            const endStr = `${String(hour+1).padStart(2,'0')}:00`;
+            const slotKey = `${dateStr}_${startStr}`;
+
+            // Múlt?
+            const slotTime = new Date(dateStr + 'T' + startStr);
+            const isPast = slotTime < now;
+
+            // Foglalt?
+            const isBusy = slotPickerBusy.some(b => {
+                const bStart = b.start;
+                const bEnd = b.end;
+                return bStart < dateStr+'T'+endStr+':00' && bEnd > dateStr+'T'+startStr+':00';
+            });
+
+            // Kiválasztva?
+            const isSelected = slotPickerSelected.some(s => s.date === dateStr && s.start === startStr);
+
+            let cellClass = '';
+            let cellStyle = 'padding:4px;text-align:center;cursor:pointer;transition:all 0.1s;height:36px;vertical-align:middle;';
+            let cellContent = '';
+            let onclick = '';
+
+            if (isPast) {
+                cellStyle += 'background:#f5f5f5;cursor:default;';
+                cellContent = '';
+            } else if (isBusy) {
+                cellStyle += 'background:#ffcdd2;cursor:default;';
+                cellContent = '<i class="fas fa-ban" style="color:#e57373;font-size:11px;"></i>';
+            } else if (isSelected) {
+                cellStyle += 'background:#4A90E2;color:#fff;border-radius:4px;';
+                cellContent = '<i class="fas fa-check" style="font-size:14px;"></i>';
+                onclick = `onclick="toggleSlot('${dateStr}','${startStr}','${endStr}')"`;
+            } else {
+                cellStyle += 'background:#e8f5e9;';
+                cellContent = '';
+                onclick = `onclick="toggleSlot('${dateStr}','${startStr}','${endStr}')"`;
+            }
+
+            html += `<td style="${cellStyle}" ${onclick}>${cellContent}</td>`;
+        });
+
+        html += '</tr>';
+    });
+
+    html += '</tbody></table>';
+    grid.innerHTML = html;
+
+    renderSelectedSlots();
+}
+
+function toggleSlot(date, start, end) {
+    const idx = slotPickerSelected.findIndex(s => s.date === date && s.start === start);
+    if (idx >= 0) {
+        slotPickerSelected.splice(idx, 1);
+    } else {
+        if (slotPickerSelected.length >= SLOT_MAX) {
+            VV.toast(`Maximum ${SLOT_MAX} időpont választható.`, 'warning');
+            return;
+        }
+        slotPickerSelected.push({ date, start, end });
+    }
+    renderSlotPicker();
+}
+
+function renderSelectedSlots() {
+    const container = document.getElementById('slot-picker-selected');
+    const btn = document.getElementById('send-quote-btn');
+    if (!container) return;
+
+    if (slotPickerSelected.length === 0) {
+        container.innerHTML = '<p class="text-muted text-center mb-0"><small>Kattints a zöld cellákra az időpont kiválasztásához</small></p>';
+        if (btn) btn.disabled = true;
         return;
     }
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const dateStr = tomorrow.toISOString().split('T')[0];
 
-    const div = document.createElement('div');
-    div.className = 'slot-row mb-2';
-    div.innerHTML = `
-        <div class="row">
-            <div class="col-5">
-                <input type="date" class="form-control form-control-sm slot-date" value="${dateStr}" min="${new Date().toISOString().split('T')[0]}">
-            </div>
-            <div class="col-3">
-                <input type="time" class="form-control form-control-sm slot-start" value="09:00" step="3600">
-            </div>
-            <div class="col-3">
-                <input type="time" class="form-control form-control-sm slot-end" value="10:00" step="3600">
-            </div>
-            <div class="col-1">
-                <button class="btn btn-sm btn-outline-danger" onclick="this.closest('.slot-row').remove()"><i class="fas fa-times"></i></button>
-            </div>
-        </div>
-    `;
-    container.appendChild(div);
+    if (btn) btn.disabled = false;
+
+    container.innerHTML = '<strong class="d-block mb-2">Kiválasztott időpontok:</strong>' +
+        slotPickerSelected.map((s, i) => {
+            const d = new Date(s.date);
+            const dayName = d.toLocaleDateString('hu-HU', { weekday: 'long' });
+            const dateStr = d.toLocaleDateString('hu-HU', { year: 'numeric', month: 'long', day: 'numeric' });
+            return `<div class="d-flex align-items-center justify-content-between mb-1 p-2" style="background:#e3f2fd;border-radius:8px;">
+                <span><strong>${dateStr}</strong> (${dayName}) ${s.start} - ${s.end}</span>
+                <button class="btn btn-sm btn-link text-danger p-0 ml-2" onclick="toggleSlot('${s.date}','${s.start}','${s.end}')"><i class="fas fa-times"></i></button>
+            </div>`;
+        }).join('');
 }
 
 // Árajánlat küldése
@@ -424,31 +570,31 @@ async function sendQuote(orderId) {
         return;
     }
 
-    const slotRows = document.querySelectorAll('#quote-slots .slot-row');
-    if (slotRows.length === 0) {
-        VV.toast('Adjon meg legalább 1 időpontot.', 'error');
+    if (slotPickerSelected.length === 0) {
+        VV.toast('Válasszon ki legalább 1 időpontot a naptárból.', 'error');
         return;
     }
 
     const user = VV.getUser();
-    const slots = [];
-    for (const row of slotRows) {
-        const date = row.querySelector('.slot-date').value;
-        const start = row.querySelector('.slot-start').value;
-        const end = row.querySelector('.slot-end').value;
-        if (!date || !start || !end) {
-            VV.toast('Töltse ki az összes időpont mezőt.', 'error');
-            return;
-        }
-        slots.push({ worker_id: user.id, date, start, end });
-    }
+    const slots = slotPickerSelected.map(s => ({
+        worker_id: user.id,
+        date: s.date,
+        start: s.start,
+        end: s.end
+    }));
+
+    const btn = document.getElementById('send-quote-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Küldés...';
 
     const res = await VV.post(`orders/${orderId}/quote`, { amount, slots });
     if (res && res.success) {
         VV.toast('Árajánlat sikeresen elküldve!', 'success');
-        showOrder(orderId); // Újratöltés
+        showOrder(orderId);
     } else {
         VV.toast(res?.message || 'Hiba történt.', 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-paper-plane mr-1"></i>Árajánlat küldése emailben';
     }
 }
 
