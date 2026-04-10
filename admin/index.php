@@ -61,22 +61,23 @@
     <aside class="main-sidebar sidebar-dark-primary elevation-4">
         <!-- Logo -->
         <a href="#" class="brand-link text-center" onclick="navigateTo('dashboard'); return false;">
-            <img src="../veresvill_logo.webp" alt="VeresVill" style="max-height: 36px;">
+            <img src="../veresvill_logo.webp" alt="VeresVill" style="max-height: 32px;">
         </a>
 
         <!-- Sidebar menü -->
         <div class="sidebar">
-            <nav class="mt-2">
+            <div style="padding: 16px 18px 8px;"><span style="font-size:10px;font-weight:700;letter-spacing:0.1em;color:rgba(255,255,255,0.2);text-transform:uppercase;">Főmenü</span></div>
+            <nav>
                 <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
                     <li class="nav-item">
                         <a href="#" class="nav-link" data-page="dashboard" onclick="navigateTo('dashboard'); return false;">
-                            <i class="nav-icon fas fa-tachometer-alt"></i>
-                            <p>Dashboard</p>
+                            <i class="nav-icon fas fa-th-large"></i>
+                            <p>Áttekintés</p>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a href="#" class="nav-link" data-page="orders" onclick="navigateTo('orders'); return false;">
-                            <i class="nav-icon fas fa-clipboard-list"></i>
+                            <i class="nav-icon fas fa-bolt"></i>
                             <p>
                                 Megrendelések
                                 <span class="badge badge-danger right d-none" id="sidebar-orders-badge">0</span>
@@ -85,20 +86,24 @@
                     </li>
                     <li class="nav-item">
                         <a href="#" class="nav-link" data-page="calendar" onclick="navigateTo('calendar'); return false;">
-                            <i class="nav-icon fas fa-calendar-alt"></i>
+                            <i class="nav-icon far fa-calendar"></i>
                             <p>Naptár</p>
                         </a>
                     </li>
                     <li class="nav-item" id="nav-users" style="display: none;">
                         <a href="#" class="nav-link" data-page="users" onclick="navigateTo('users'); return false;">
-                            <i class="nav-icon fas fa-users"></i>
-                            <p>Felhasználók</p>
+                            <i class="nav-icon fas fa-user-friends"></i>
+                            <p>Csapat</p>
                         </a>
                     </li>
-                    <li class="nav-header">RENDSZER</li>
+                </ul>
+            </nav>
+            <div style="padding: 20px 18px 8px;"><span style="font-size:10px;font-weight:700;letter-spacing:0.1em;color:rgba(255,255,255,0.2);text-transform:uppercase;">Rendszer</span></div>
+            <nav>
+                <ul class="nav nav-pills nav-sidebar flex-column" role="menu">
                     <li class="nav-item">
                         <a href="#" class="nav-link" data-page="settings" onclick="navigateTo('settings'); return false;">
-                            <i class="nav-icon fas fa-cog"></i>
+                            <i class="nav-icon fas fa-sliders-h"></i>
                             <p>Beállítások</p>
                         </a>
                     </li>
@@ -163,10 +168,10 @@ function navigateTo(page) {
 
     // Navbar cím
     const titles = {
-        dashboard: 'Dashboard',
+        dashboard: 'Áttekintés',
         orders: 'Megrendelések',
         calendar: 'Naptár',
-        users: 'Felhasználók',
+        users: 'Csapat',
         settings: 'Beállítások'
     };
     document.getElementById('navbar-title').textContent = titles[page] || page;

@@ -198,18 +198,35 @@ const VV = {
         }
     },
 
-    // Oldal betöltés
+    // Oldal betöltés — app-szerű transition
     async loadPage(page) {
         const content = document.getElementById('page-content');
         if (!content) return;
 
+        // Fade out
+        content.style.opacity = '0';
+        content.style.transform = 'translateY(6px)';
+        content.style.transition = 'opacity 0.12s ease, transform 0.12s ease';
+
+        await new Promise(r => setTimeout(r, 120));
+
         content.innerHTML = '<div class="text-center p-5"><i class="fas fa-spinner fa-spin fa-2x text-primary"></i></div>';
+        content.style.opacity = '1';
+        content.style.transform = 'translateY(0)';
 
         try {
             const res = await fetch('pages/' + page + '.php');
             if (res.ok) {
                 const html = await res.text();
+                content.style.opacity = '0';
+                content.style.transform = 'translateY(8px)';
                 content.innerHTML = html;
+                // Fade in
+                requestAnimationFrame(() => {
+                    content.style.transition = 'opacity 0.25s cubic-bezier(0.22,1,0.36,1), transform 0.25s cubic-bezier(0.22,1,0.36,1)';
+                    content.style.opacity = '1';
+                    content.style.transform = 'translateY(0)';
+                });
 
                 // innerHTML-lel beszúrt <script> tagok nem futnak le
                 // eval()-lal futtatjuk őket, hogy ne ütközzön a let/const deklaráció

@@ -893,28 +893,247 @@ label {
 }
 
 /* ============================================
-   ANIMATIONS
+   ANIMATIONS — mobile-app feel
    ============================================ */
+
+/* Alap keyframes */
 @keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(8px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-16px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+    from { opacity: 0; transform: translateX(16px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+/* Oldal tartalom betöltés */
 .content-wrapper .content {
-    animation: fadeInUp 0.25s ease;
+    animation: fadeInUp 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* Content header */
+.content-header {
+    animation: fadeIn 0.2s ease;
+}
+
+.content-header h1 {
+    animation: slideInLeft 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Stat kártyák staggered */
 .small-box {
-    animation: fadeInUp 0.3s ease backwards;
+    animation: fadeInUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 
-.small-box:nth-child(1) { animation-delay: 0s; }
-.small-box:nth-child(2) { animation-delay: 0.05s; }
-.small-box:nth-child(3) { animation-delay: 0.1s; }
-.small-box:nth-child(4) { animation-delay: 0.15s; }
+.col-lg-3:nth-child(1) .small-box { animation-delay: 0.05s; }
+.col-lg-3:nth-child(2) .small-box { animation-delay: 0.1s; }
+.col-lg-3:nth-child(3) .small-box { animation-delay: 0.15s; }
+.col-lg-3:nth-child(4) .small-box { animation-delay: 0.2s; }
+
+/* Kártyák */
+.card {
+    animation: scaleIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    animation-delay: 0.15s;
+}
+
+/* Táblázat sorok staggered */
+.table-hover tbody tr {
+    animation: fadeInUp 0.3s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+.table-hover tbody tr:nth-child(1) { animation-delay: 0.05s; }
+.table-hover tbody tr:nth-child(2) { animation-delay: 0.08s; }
+.table-hover tbody tr:nth-child(3) { animation-delay: 0.11s; }
+.table-hover tbody tr:nth-child(4) { animation-delay: 0.14s; }
+.table-hover tbody tr:nth-child(5) { animation-delay: 0.17s; }
+.table-hover tbody tr:nth-child(6) { animation-delay: 0.20s; }
+.table-hover tbody tr:nth-child(7) { animation-delay: 0.23s; }
+.table-hover tbody tr:nth-child(8) { animation-delay: 0.26s; }
+.table-hover tbody tr:nth-child(9) { animation-delay: 0.29s; }
+.table-hover tbody tr:nth-child(10) { animation-delay: 0.32s; }
+
+/* Gombok — tapintás effekt */
+.btn:active {
+    transform: scale(0.96) !important;
+    transition: transform 0.08s !important;
+}
+
+.btn-primary:active {
+    box-shadow: 0 0 0 4px var(--vv-blue-glow) !important;
+}
+
+/* Sidebar menü elemek — app-szerű hover & tap */
+.nav-sidebar .nav-link {
+    position: relative;
+    overflow: hidden;
+}
+
+.nav-sidebar .nav-link::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255,255,255,0.08);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.4s ease, height 0.4s ease;
+}
+
+.nav-sidebar .nav-link:active::after {
+    width: 200%;
+    height: 200%;
+}
+
+/* Sidebar aktív jelző vonal */
+.nav-sidebar .nav-link.active {
+    position: relative;
+}
+
+.nav-sidebar .nav-link.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 20%;
+    bottom: 20%;
+    width: 3px;
+    background: var(--vv-blue);
+    border-radius: 0 3px 3px 0;
+    animation: slideInLeft 0.2s ease;
+}
+
+/* Badge pulse animáció — új megrendelés */
+.nav-sidebar .badge-danger:not(.d-none) {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+/* Navbar badge pulse */
+.navbar-badge:not(.d-none) {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+/* Modal — app-szerű slide up */
+.modal.fade .modal-dialog {
+    transform: translateY(30px) scale(0.97) !important;
+    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease !important;
+}
+
+.modal.show .modal-dialog {
+    transform: translateY(0) scale(1) !important;
+}
+
+/* Toast — slide in right */
+.toast {
+    animation: slideInRight 0.3s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+/* Kártyák — hover lift (subtle) */
+.card {
+    transition: transform var(--vv-transition), box-shadow var(--vv-transition) !important;
+}
+
+.card:hover {
+    transform: translateY(-1px) !important;
+}
+
+/* Loading spinner — smooth pulse */
+.vv-loading i {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Smooth page transitions for hash navigation */
+#page-content {
+    transition: opacity 0.15s ease;
+}
+
+#page-content.loading {
+    opacity: 0.4;
+}
+
+/* Slot picker — cell tap animation */
+#slot-picker-grid td {
+    transition: all 0.15s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+#slot-picker-grid td:active {
+    transform: scale(0.92) !important;
+}
+
+/* Order detail — staggered fields */
+.order-detail-label {
+    animation: fadeIn 0.3s ease backwards;
+}
+
+.order-detail-value {
+    animation: fadeInUp 0.3s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+/* Status timeline items — staggered */
+.status-timeline .timeline-item {
+    animation: slideInLeft 0.3s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+.status-timeline .timeline-item:nth-child(1) { animation-delay: 0.1s; }
+.status-timeline .timeline-item:nth-child(2) { animation-delay: 0.15s; }
+.status-timeline .timeline-item:nth-child(3) { animation-delay: 0.2s; }
+.status-timeline .timeline-item:nth-child(4) { animation-delay: 0.25s; }
+.status-timeline .timeline-item:nth-child(5) { animation-delay: 0.3s; }
+
+/* Mobile sidebar overlay — smooth */
+@media (max-width: 991px) {
+    .main-sidebar {
+        transition: margin-left 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+                    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1) !important;
+    }
+
+    .sidebar-open .main-sidebar {
+        box-shadow: 8px 0 30px rgba(0,0,0,0.4) !important;
+    }
+}
+
+/* Ripple effect for interactive elements */
+@keyframes ripple {
+    to {
+        transform: scale(2.5);
+        opacity: 0;
+    }
+}
+
+/* Smooth scroll behavior */
+.content-wrapper {
+    scroll-behavior: smooth;
+}
+
+/* Focus visible — accessibility + app feel */
+*:focus-visible {
+    outline: 2px solid var(--vv-blue) !important;
+    outline-offset: 2px;
+    border-radius: 4px;
+}
