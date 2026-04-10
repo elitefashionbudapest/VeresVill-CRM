@@ -86,9 +86,11 @@ class MailService
         string $textBody,
         ?string $replyTo = null
     ): bool {
-        // Teszt módban nem küld emailt
-        if (env('APP_DEBUG') === 'true') {
-            error_log("MailService [TEST MODE - nem küldve]: To={$to}, Subject={$subject}");
+        // Teszt módban: csak az admin felé menő emaileket blokkoljuk
+        // Árajánlat emailek (ügyfélnek) mennek teszteléshez is
+        $adminEmail = env('ADMIN_EMAIL', 'veresvill.ads@gmail.com');
+        if (env('APP_DEBUG') === 'true' && $to === $adminEmail) {
+            error_log("MailService [TEST MODE - admin email kihagyva]: To={$to}, Subject={$subject}");
             return true;
         }
 

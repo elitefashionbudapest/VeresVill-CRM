@@ -112,8 +112,32 @@ class QuoteController {
             Response::error('Hiba történt az árajánlat mentésekor.', 500);
         }
 
-        // Email küldés (placeholder - MailService még nem létezik)
-        // MailService::sendQuoteEmail($order, $quoteToken, $amount, $slots);
+        // Email küldés az ügyfélnek
+        try {
+            require_once __DIR__ . '/../services/MailService.php';
+            // Frissített order adatok a tokennel
+            $stmt = $pdo->prepare("SELECT * FROM vv_orders WHERE id = ?");
+            $stmt->execute([$orderId]);
+            $updatedOrder = $stmt->fetch();
+
+            // Slotok az adatbázisból (ID-val együtt)
+            $stmt = $pdo->prepare("SELECT * FROM vv_time_slots WHERE order_id = ? ORDER BY slot_date ASC, slot_start ASC");
+            $stmt->execute([$orderId]);
+            $savedSlots = $stmt->fetchAll();
+
+            // Slot formátum a sablonhoz
+            $emailSlots = array_map(function($s) {
+                return [
+                    'id' => $s['id'],
+                    'start_time' => $s['slot_date'] . ' ' . $s['slot_start'],
+                    'end_time' => $s['slot_date'] . ' ' . $s['slot_end'],
+                ];
+            }, $savedSlots);
+
+            MailService::sendQuoteEmail($updatedOrder, $amount, $emailSlots);
+        } catch (\Exception $mailError) {
+            error_log('Quote email error: ' . $mailError->getMessage());
+        }
 
         Response::success([
             'order_id'    => $orderId,
