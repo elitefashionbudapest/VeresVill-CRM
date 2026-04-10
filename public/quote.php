@@ -187,7 +187,9 @@
     }
 
     function renderQuote(q) {
-        const firstName = q.customer_name.split(' ')[0];
+        // Magyar neveknél az utolsó szó a keresztnév (pl. "Németh Ádám" → "Ádám")
+        const nameParts = q.customer_name.trim().split(' ');
+        const firstName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : nameParts[0];
         const discountedAmount = q.quote_amount;
         const originalAmount = Math.ceil(discountedAmount / 0.9 / 1000) * 1000;
         const savings = originalAmount - discountedAmount;
