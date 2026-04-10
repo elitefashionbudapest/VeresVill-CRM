@@ -188,7 +188,12 @@
 
     function renderQuote(q) {
         const firstName = q.customer_name.split(' ')[0];
-        const amount = new Intl.NumberFormat('hu-HU').format(q.quote_amount);
+        const discountedAmount = q.quote_amount;
+        const originalAmount = Math.ceil(discountedAmount / 0.9 / 1000) * 1000;
+        const savings = originalAmount - discountedAmount;
+        const amount = new Intl.NumberFormat('hu-HU').format(discountedAmount);
+        const originalFormatted = new Intl.NumberFormat('hu-HU').format(originalAmount);
+        const savingsFormatted = new Intl.NumberFormat('hu-HU').format(savings);
 
         const slotsHtml = (q.time_slots || []).map(s => {
             const d = new Date(s.slot_date);
@@ -223,8 +228,9 @@
                 </div>
 
                 <div class="price-box">
-                    <div class="price-label">Árajánlat összege</div>
+                    <div style="color:rgba(255,255,255,0.6);font-size:14px;text-decoration:line-through;">${originalFormatted} Ft</div>
                     <div class="price-amount">${amount} Ft</div>
+                    <div style="color:#FFD54F;font-size:15px;font-weight:700;margin-top:4px;">-10% kedvezmény (megtakarítás: ${savingsFormatted} Ft)</div>
                     <div class="price-note">Bruttó ár, tartalmazza az ÁFÁ-t</div>
                 </div>
 

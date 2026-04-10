@@ -20,10 +20,16 @@
 function getQuoteEmailHtml(array $order, int $amount, array $slots, string $token): string
 {
     $firstName = explode(' ', $order['customer_name'] ?? '')[0];
-    $address = htmlspecialchars($order['address'] ?? '');
+    $address = htmlspecialchars($order['customer_address'] ?? $order['address'] ?? '');
     $propertyLabel = htmlspecialchars($order['property_type_label'] ?? $order['property_type'] ?? '');
     $size = htmlspecialchars($order['size'] ?? '');
+
+    // Kedvezményes ár: a beírt összeg = -10%-os ár, eredeti = összeg / 0.9
+    $originalAmount = (int) ceil($amount / 0.9 / 1000) * 1000;
     $formattedAmount = number_format($amount, 0, ',', '.');
+    $formattedOriginal = number_format($originalAmount, 0, ',', '.');
+    $savings = number_format($originalAmount - $amount, 0, ',', '.');
+
     $appUrl = rtrim(env('APP_URL', 'https://veresvill.hu'), '/');
 
     // Idopont gombok generalasa
@@ -121,9 +127,10 @@ SLOT;
             <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                     <td style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); padding: 25px; border-radius: 12px; text-align: center;">
-                        <p style="color: rgba(255,255,255,0.9); margin: 0 0 8px; font-size: 14px; font-weight: 600;">Arajanlat osszege:</p>
-                        <p style="color: #FFFFFF; margin: 0; font-size: 32px; font-weight: 800;">{$formattedAmount} Ft</p>
-                        <p style="color: rgba(255,255,255,0.8); margin: 8px 0 0; font-size: 13px;">Brutto ar, tartalmazza az AFA-t</p>
+                        <p style="color: rgba(255,255,255,0.7); margin: 0 0 4px; font-size: 14px;"><span style="text-decoration: line-through;">{$formattedOriginal} Ft</span></p>
+                        <p style="color: #FFFFFF; margin: 0; font-size: 36px; font-weight: 800;">{$formattedAmount} Ft</p>
+                        <p style="color: #FFD54F; margin: 8px 0 0; font-size: 15px; font-weight: 700;">-10% kedvezmeny (megtakaritas: {$savings} Ft)</p>
+                        <p style="color: rgba(255,255,255,0.7); margin: 6px 0 0; font-size: 12px;">Brutto ar, tartalmazza az AFA-t</p>
                     </td>
                 </tr>
             </table>
@@ -186,10 +193,14 @@ HTML;
 function getQuoteEmailText(array $order, int $amount, array $slots, string $token): string
 {
     $firstName = explode(' ', $order['customer_name'] ?? '')[0];
-    $address = $order['address'] ?? '';
+    $address = $order['customer_address'] ?? $order['address'] ?? '';
     $propertyLabel = $order['property_type_label'] ?? $order['property_type'] ?? '';
     $size = $order['size'] ?? '';
+
+    $originalAmount = (int) ceil($amount / 0.9 / 1000) * 1000;
     $formattedAmount = number_format($amount, 0, ',', '.');
+    $formattedOriginal = number_format($originalAmount, 0, ',', '.');
+
     $appUrl = rtrim(env('APP_URL', 'https://veresvill.hu'), '/');
 
     $text = "Tisztelt {$firstName}!\n\n";
@@ -198,7 +209,8 @@ function getQuoteEmailText(array $order, int $amount, array $slots, string $toke
     $text .= "Cim: {$address}\n";
     $text .= "Tipus: {$propertyLabel}\n";
     $text .= "Meret: {$size} m2\n\n";
-    $text .= "ARAJANLAT OSSZEGE: {$formattedAmount} Ft\n";
+    $text .= "EREDETI AR: {$formattedOriginal} Ft\n";
+    $text .= "KEDVEZMENYES AR: {$formattedAmount} Ft (-10%)\n";
     $text .= "(Brutto ar, tartalmazza az AFA-t)\n\n";
     $text .= "VALASSZON IDOPONTOT:\n";
 
