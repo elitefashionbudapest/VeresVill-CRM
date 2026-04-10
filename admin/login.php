@@ -36,6 +36,9 @@
         .login-logo img {
             max-width: 180px;
             margin-bottom: 8px;
+            background: #fff;
+            padding: 6px 14px;
+            border-radius: 8px;
         }
         .login-logo p {
             color: rgba(255,255,255,0.85);

@@ -27,6 +27,9 @@ body {
 
 .brand-link img {
     max-height: 36px;
+    background: #fff;
+    padding: 4px 10px;
+    border-radius: 6px;
 }
 
 .nav-sidebar .nav-link {
