@@ -87,42 +87,42 @@ class MailService
         ?string $replyTo = null
     ): bool {
         // Teszt módban: csak az admin felé menő emaileket blokkoljuk
-        // Árajánlat emailek (ügyfélnek) mennek teszteléshez is
         $adminEmail = env('ADMIN_EMAIL', 'veresvill.ads@gmail.com');
         if (env('APP_DEBUG') === 'true' && $to === $adminEmail) {
             error_log("MailService [TEST MODE - admin email kihagyva]: To={$to}, Subject={$subject}");
             return true;
         }
 
+        $fromEmail = env('FROM_EMAIL', 'ajanlatkeres@veresvill.hu');
+        $fromName  = env('FROM_NAME', 'Veresvill - Villamos Felülvizsgálat');
+        $useSmtp   = env('MAIL_METHOD', 'phpmail') === 'smtp';
+
         try {
             $mail = new PHPMailer(true);
             $mail->CharSet = 'UTF-8';
             $mail->Encoding = 'base64';
 
-            // SMTP beállítások .env-ből
-            $mail->isSMTP();
-            $mail->Host       = env('SMTP_HOST', 'mail.veresvill.hu');
-            $mail->SMTPAuth   = true;
-            $mail->Username   = env('SMTP_USER', 'ajanlatkeres@veresvill.hu');
-            $mail->Password   = env('SMTP_PASS');
-            $mail->SMTPSecure = env('SMTP_SECURE', 'ssl');
-            $mail->Port       = (int) env('SMTP_PORT', '465');
+            if ($useSmtp) {
+                // SMTP mód (éles szerveren)
+                $mail->isSMTP();
+                $mail->Host       = env('SMTP_HOST', 'mail.veresvill.hu');
+                $mail->SMTPAuth   = true;
+                $mail->Username   = env('SMTP_USER', 'ajanlatkeres@veresvill.hu');
+                $mail->Password   = env('SMTP_PASS');
+                $mail->SMTPSecure = env('SMTP_SECURE', 'ssl');
+                $mail->Port       = (int) env('SMTP_PORT', '465');
+            } else {
+                // PHP mail() — nincs SMTP konfig, a szerver saját levelezőjét használja
+                $mail->isMail();
+            }
 
-            // Feladó
-            $mail->setFrom(
-                env('FROM_EMAIL', 'ajanlatkeres@veresvill.hu'),
-                env('FROM_NAME', 'Veresvill - Villamos Felülvizsgálat')
-            );
-
-            // Címzett
+            $mail->setFrom($fromEmail, $fromName);
             $mail->addAddress($to, $toName);
 
-            // Reply-To
             if ($replyTo !== null) {
                 $mail->addReplyTo($replyTo);
             }
 
-            // Tartalom
             $mail->isHTML(true);
             $mail->Subject = $subject;
             $mail->Body    = $htmlBody;
