@@ -15,8 +15,12 @@ $uri    = $_SERVER['REQUEST_URI'] ?? '/';
 // Query string eltávolítása
 $uri = parse_url($uri, PHP_URL_PATH);
 
-// /api/ prefix eltávolítása
-$uri = preg_replace('#^/api/#', '', ltrim($uri, '/'));
+// Base path és /api/ prefix eltávolítása (almappában is működjön)
+$basePath = env('APP_BASE_PATH', '');
+if ($basePath) {
+    $uri = preg_replace('#^' . preg_quote(ltrim($basePath, '/'), '#') . '/#', '', ltrim($uri, '/'));
+}
+$uri = preg_replace('#^api/#', '', ltrim($uri, '/'));
 $uri = rtrim($uri, '/');
 
 // JSON input POST/PUT kérésekhez

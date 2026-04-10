@@ -6,7 +6,7 @@
 
 // CORS és response beállítások
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: https://veresvill.hu');
+header('Access-Control-Allow-Origin: ' . (defined('APP_ORIGIN') ? APP_ORIGIN : 'https://veresvill.hu'));
 header('Access-Control-Allow-Methods: POST');
 header('Access-Control-Allow-Headers: Content-Type');
 
@@ -33,6 +33,11 @@ use PHPMailer\PHPMailer\Exception;
 // SMTP BEÁLLÍTÁSOK - .env fájlból
 // ============================================
 require_once __DIR__ . '/api/config/env.php';
+
+// CORS origin az .env-ből
+$appUrl = env('APP_URL', 'https://veresvill.hu');
+$parsedUrl = parse_url($appUrl);
+define('APP_ORIGIN', ($parsedUrl['scheme'] ?? 'https') . '://' . ($parsedUrl['host'] ?? 'veresvill.hu'));
 
 define('SMTP_HOST', env('SMTP_HOST', 'mail.veresvill.hu'));
 define('SMTP_PORT', (int) env('SMTP_PORT', '465'));
