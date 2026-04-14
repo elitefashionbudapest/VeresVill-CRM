@@ -845,8 +845,7 @@
             const submitBtn = form.querySelector('.submit-button');
             const originalText = submitBtn.textContent;
 
-            // reCAPTCHA ellenőrzés (TESZT: kikapcsolva — élesítéskor visszakapcsolni!)
-            /*
+            // reCAPTCHA ellenőrzés
             if (typeof grecaptcha === 'undefined' || !grecaptcha.getResponse) {
                 showFormError(submitBtn, originalText, 'A reCAPTCHA még töltődik, kérjük várjon pár másodpercet.');
                 return false;
@@ -856,7 +855,6 @@
                 showFormError(submitBtn, originalText, 'Kérjük, igazolja hogy nem robot!');
                 return false;
             }
-            */
 
             // Küldés állapot
             submitBtn.disabled = true;
@@ -921,7 +919,7 @@
                     `;
                 } else {
                     showFormError(submitBtn, originalText, data.message || 'Hiba történt. Kérjük, próbálja újra.');
-                    // grecaptcha.reset(); // TESZT: kikapcsolva
+                    grecaptcha.reset();
                 }
             })
             .catch(error => {

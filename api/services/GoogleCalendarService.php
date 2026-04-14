@@ -409,7 +409,7 @@ class GoogleCalendarService {
         $fieldMap = [
             'forrás'     => 'veresvill',
             'ki megy?'   => 'Szebasztián',
-            'cím'        => 'TESZT ' . ($order['customer_address'] ?? ''),
+            'cím'        => $order['customer_address'] ?? '',
             'név'        => $nevEmail,
             'telefon'    => $order['customer_phone'] ?? '',
             'ár'         => (int) ($order['quote_amount'] ?? 0),
