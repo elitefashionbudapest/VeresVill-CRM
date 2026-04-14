@@ -46,8 +46,11 @@ define('SMTP_USER', env('SMTP_USER', 'ajanlatkeres@veresvill.hu'));
 define('SMTP_PASS', env('SMTP_PASS'));
 define('ADMIN_EMAIL', env('ADMIN_EMAIL', 'veresvill.ads@gmail.com'));
 define('ADMIN_NAME', env('ADMIN_NAME', 'Veresvill'));
-define('FROM_EMAIL', env('FROM_EMAIL', 'ajanlatkeres@veresvill.hu'));
+// FROM cím a szerver domainjén, hogy SPF/DKIM rendben legyen (Gmail elfogadja).
+// A reply-to marad az ajanlatkeres@veresvill.hu, így a válaszok oda futnak be.
+define('FROM_EMAIL', 'noreply@visualbyadam.hu');
 define('FROM_NAME', env('FROM_NAME', 'Veresvill - Villamos Felülvizsgálat'));
+define('REPLY_TO_EMAIL', env('FROM_EMAIL', 'ajanlatkeres@veresvill.hu'));
 
 // Google reCAPTCHA
 define('RECAPTCHA_SECRET', env('RECAPTCHA_SECRET', '6LdAzG8sAAAAAIbEobU5Eg9BuUTv_H5dwT9h6mBp'));
@@ -265,7 +268,7 @@ try {
     $customerMail->setFrom(FROM_EMAIL, FROM_NAME);
     $customerMail->Sender = FROM_EMAIL;
     $customerMail->addAddress($email, $name);
-    $customerMail->addReplyTo(ADMIN_EMAIL, ADMIN_NAME);
+    $customerMail->addReplyTo(REPLY_TO_EMAIL, FROM_NAME);
 
     $customerMail->isHTML(true);
     $customerMail->Subject = 'Megrendelését megkaptuk! - Veresvill Villamos Felülvizsgálat';

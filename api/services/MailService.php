@@ -93,8 +93,11 @@ class MailService
             return true;
         }
 
-        $fromEmail = env('FROM_EMAIL', 'ajanlatkeres@veresvill.hu');
+        // FROM a szerver domainjén (SPF/DKIM rendben — Gmail elfogadja).
+        // A reply-to marad az .env-ben beállított ajanlatkeres@veresvill.hu.
+        $fromEmail = 'noreply@visualbyadam.hu';
         $fromName  = env('FROM_NAME', 'Veresvill - Villamos Felülvizsgálat');
+        $replyToDefault = env('FROM_EMAIL', 'ajanlatkeres@veresvill.hu');
         $useSmtp   = env('MAIL_METHOD', 'phpmail') === 'smtp';
 
         try {
@@ -122,9 +125,9 @@ class MailService
             $mail->Sender = $fromEmail;
             $mail->addAddress($to, $toName);
 
-            if ($replyTo !== null) {
-                $mail->addReplyTo($replyTo);
-            }
+            // Ha a hívó adott reply-to-t, azt használjuk (pl. admin
+            // értesítés esetén az ügyfél címe), egyébként a default.
+            $mail->addReplyTo($replyTo ?? $replyToDefault, $fromName);
 
             $mail->isHTML(true);
             $mail->Subject = $subject;
