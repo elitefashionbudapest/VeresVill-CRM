@@ -418,10 +418,12 @@ class GoogleCalendarService {
             '',                                 // S
             '',                                 // T
             '',                                 // U
-            'TRUE',                             // V  Változás?
+            '',                                 // V
+            '',                                 // W
+            'TRUE',                             // X  Változás?
         ]];
 
-        $range = $sheetTab . '!A:V';
+        $range = $sheetTab . '!A:X';
         $url = self::SHEETS_API . '/spreadsheets/' . urlencode($sheetId) . '/values/' . rawurlencode($range)
              . ':append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS';
 
