@@ -397,20 +397,31 @@ class GoogleCalendarService {
         $nevEmail = trim(($order['customer_name'] ?? '') . ' ' . ($order['customer_email'] ?? ''));
 
         $values = [[
-            'veresvill',                        // Forrás
-            '',                                 // Állapot (üresen hagyjuk)
-            'Szebasztián',                      // Ki megy?
-            'TESZT ' . ($order['customer_address'] ?? ''), // Cím
-            $nevEmail,                          // Név
-            $order['customer_phone'] ?? '',     // Telefon
-            (int) ($order['quote_amount'] ?? 0),// Ár
-            '',                                 // Határidő
-            'Nem mozgatható',                   // Időpont?
-            $datumHu,                           // Dátum
-            $ido,                               // Idő
+            'veresvill',                        // A  Forrás
+            '',                                 // B  Állapot (üres)
+            'Szebasztián',                      // C  Ki megy?
+            'TESZT ' . ($order['customer_address'] ?? ''), // D  Cím
+            $nevEmail,                          // E  Név
+            $order['customer_phone'] ?? '',     // F  Telefon
+            (int) ($order['quote_amount'] ?? 0),// G  Ár
+            '',                                 // H  Határidő
+            'Nem mozgatható',                   // I  Időpont?
+            $datumHu,                           // J  Dátum
+            $ido,                               // K  Idő
+            '',                                 // L  Felmérés?
+            '',                                 // M  Fizetett?
+            '',                                 // N  Kiküldve?
+            '',                                 // O  Megjegyzés
+            '',                                 // P  Elszámolás?
+            '',                                 // Q  Elszámolandó
+            '',                                 // R  Hibakereső
+            '',                                 // S
+            '',                                 // T
+            '',                                 // U
+            'TRUE',                             // V  Változás?
         ]];
 
-        $range = $sheetTab . '!A:K';
+        $range = $sheetTab . '!A:V';
         $url = self::SHEETS_API . '/spreadsheets/' . urlencode($sheetId) . '/values/' . rawurlencode($range)
              . ':append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS';
 
