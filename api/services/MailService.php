@@ -117,6 +117,9 @@ class MailService
             }
 
             $mail->setFrom($fromEmail, $fromName);
+            // Envelope sender — phpmail() módban a -f paramétert állítja be,
+            // ami nélkül a legtöbb shared host nem fogadja el a küldést
+            $mail->Sender = $fromEmail;
             $mail->addAddress($to, $toName);
 
             if ($replyTo !== null) {
@@ -128,10 +131,13 @@ class MailService
             $mail->Body    = $htmlBody;
             $mail->AltBody = $textBody;
 
-            $mail->send();
-            return true;
+            $ok = $mail->send();
+            if (!$ok) {
+                error_log('MailService send failed: ' . $mail->ErrorInfo);
+            }
+            return $ok;
         } catch (Exception $e) {
-            error_log('MailService error: ' . $e->getMessage());
+            error_log('MailService exception: ' . $e->getMessage() . ' | ErrorInfo: ' . ($mail->ErrorInfo ?? ''));
             return false;
         }
     }
