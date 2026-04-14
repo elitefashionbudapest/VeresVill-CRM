@@ -1,5 +1,7 @@
 # Környezeti változók (SOHA ne pushold!)
 .env
+.env.production
+.env.*
 
 # IDE / editor
 .claude/
