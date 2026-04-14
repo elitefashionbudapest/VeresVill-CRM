@@ -156,17 +156,22 @@ if (env('APP_DEBUG') === 'true') {
         $adminMail->CharSet = 'UTF-8';
         $adminMail->Encoding = 'base64';
 
-        // SMTP beállítások
-        $adminMail->isSMTP();
-        $adminMail->Host       = SMTP_HOST;
-        $adminMail->SMTPAuth   = true;
-        $adminMail->Username   = SMTP_USER;
-        $adminMail->Password   = SMTP_PASS;
-        $adminMail->SMTPSecure = SMTP_SECURE;
-        $adminMail->Port       = SMTP_PORT;
+        // Küldési mód (.env MAIL_METHOD)
+        if (env('MAIL_METHOD', 'phpmail') === 'smtp') {
+            $adminMail->isSMTP();
+            $adminMail->Host       = SMTP_HOST;
+            $adminMail->SMTPAuth   = true;
+            $adminMail->Username   = SMTP_USER;
+            $adminMail->Password   = SMTP_PASS;
+            $adminMail->SMTPSecure = SMTP_SECURE;
+            $adminMail->Port       = SMTP_PORT;
+        } else {
+            $adminMail->isMail();
+        }
 
         // Feladó / Címzett
         $adminMail->setFrom(FROM_EMAIL, FROM_NAME);
+        $adminMail->Sender = FROM_EMAIL;
         $adminMail->addAddress(ADMIN_EMAIL, ADMIN_NAME);
         $adminMail->addBCC('adam@visualbyadam.hu', 'Adam');
         $adminMail->addReplyTo($email, $name);
@@ -244,13 +249,18 @@ try {
     $customerMail->CharSet = 'UTF-8';
     $customerMail->Encoding = 'base64';
 
-    $customerMail->isSMTP();
-    $customerMail->Host       = SMTP_HOST;
-    $customerMail->SMTPAuth   = true;
-    $customerMail->Username   = SMTP_USER;
-    $customerMail->Password   = SMTP_PASS;
-    $customerMail->SMTPSecure = SMTP_SECURE;
-    $customerMail->Port       = SMTP_PORT;
+    $useSmtp = env('MAIL_METHOD', 'phpmail') === 'smtp';
+    if ($useSmtp) {
+        $customerMail->isSMTP();
+        $customerMail->Host       = SMTP_HOST;
+        $customerMail->SMTPAuth   = true;
+        $customerMail->Username   = SMTP_USER;
+        $customerMail->Password   = SMTP_PASS;
+        $customerMail->SMTPSecure = SMTP_SECURE;
+        $customerMail->Port       = SMTP_PORT;
+    } else {
+        $customerMail->isMail();
+    }
 
     $customerMail->setFrom(FROM_EMAIL, FROM_NAME);
     $customerMail->Sender = FROM_EMAIL;
@@ -262,9 +272,12 @@ try {
     $customerMail->Body    = getCustomerEmailHtml($name, $email, $phone, $address, $propertyLabel, $size, $urgencyLabel, $message, $dateTime);
     $customerMail->AltBody = getCustomerEmailText($name, $address, $urgencyLabel, $dateTime);
 
-    $customerMail->send();
+    $ok = $customerMail->send();
+    if (!$ok) {
+        error_log('Customer mail failed: ' . $customerMail->ErrorInfo);
+    }
 } catch (Exception $e) {
-    error_log('Customer mail error: ' . $e->getMessage());
+    error_log('Customer mail exception: ' . $e->getMessage());
 }
 
 // Siker
