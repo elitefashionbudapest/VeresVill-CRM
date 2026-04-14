@@ -167,6 +167,8 @@ class GoogleCalendarController {
         $icon = $success ? '&#10003;' : '&#10007;';
         $color = $success ? '#10B981' : '#EF4444';
         $bgColor = $success ? '#D1FAE5' : '#FEE2E2';
+        $basePath = rtrim(env('APP_BASE_PATH', ''), '/');
+        $adminUrl = $basePath . '/admin/index.php#settings';
 
         header('Content-Type: text/html; charset=utf-8');
         echo <<<HTML
@@ -192,7 +194,7 @@ class GoogleCalendarController {
         <div class="icon">{$icon}</div>
         <h1>{$title}</h1>
         <p>{$message}</p>
-        <a href="../admin/index.php#settings" class="btn">Vissza az admin panelhez</a>
+        <a href="{$adminUrl}" class="btn">Vissza az admin panelhez</a>
     </div>
     <script>setTimeout(() => window.close(), 5000);</script>
 </body>
