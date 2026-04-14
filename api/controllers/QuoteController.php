@@ -380,6 +380,14 @@ class QuoteController {
             error_log('Sheets append exception: ' . $sheetErr->getMessage());
         }
 
+        // Megrendelői visszaigazoló email az elfogadott időponttal (nem kritikus)
+        try {
+            require_once __DIR__ . '/../services/MailService.php';
+            MailService::sendCustomerConfirmation($order, $slot);
+        } catch (\Exception $mailErr) {
+            error_log('Customer confirmation mail exception: ' . $mailErr->getMessage());
+        }
+
         Response::success([
             'order_id' => $order['id'],
             'slot'     => $slot,

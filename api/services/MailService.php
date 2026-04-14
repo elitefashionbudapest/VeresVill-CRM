@@ -43,6 +43,55 @@ class MailService
     }
 
     /**
+     * Megrendelői visszaigazolás az elfogadott időponttal.
+     *
+     * @param array $order        customer_name, customer_email, customer_address, quote_amount
+     * @param array $selectedSlot slot_date, slot_start, slot_end
+     */
+    public static function sendCustomerConfirmation(array $order, array $selectedSlot): bool
+    {
+        require_once __DIR__ . '/../templates/quote_confirmed_customer.php';
+
+        $gcalUrl = self::buildGoogleCalendarUrl($order, $selectedSlot);
+        $htmlBody = getQuoteConfirmedCustomerHtml($order, $selectedSlot, $gcalUrl);
+        $textBody = getQuoteConfirmedCustomerText($order, $selectedSlot, $gcalUrl);
+
+        $subject = 'Időpont megerősítve — Veresvill Villamos Felülvizsgálat';
+
+        return self::sendRaw(
+            $order['customer_email'],
+            $order['customer_name'] ?? '',
+            $subject,
+            $htmlBody,
+            $textBody,
+            env('ADMIN_EMAIL', 'veresvill.ads@gmail.com')
+        );
+    }
+
+    /**
+     * "Add to Google Calendar" link a megrendelonek.
+     * Nem kell OAuth, csak egy pre-filled URL amit a user a sajat
+     * Google fiokjaban nyit meg.
+     */
+    private static function buildGoogleCalendarUrl(array $order, array $selectedSlot): string
+    {
+        $tz = new DateTimeZone('Europe/Budapest');
+        $start = new DateTime($selectedSlot['slot_date'] . ' ' . $selectedSlot['slot_start'], $tz);
+        $end   = new DateTime($selectedSlot['slot_date'] . ' ' . $selectedSlot['slot_end'], $tz);
+        $start->setTimezone(new DateTimeZone('UTC'));
+        $end->setTimezone(new DateTimeZone('UTC'));
+
+        $params = [
+            'action'   => 'TEMPLATE',
+            'text'     => 'Villamos biztonsági felülvizsgálat',
+            'dates'    => $start->format('Ymd\THis\Z') . '/' . $end->format('Ymd\THis\Z'),
+            'details'  => "Veresvill helyszíni mérés\nÖsszeg: " . number_format((int)($order['quote_amount'] ?? 0), 0, ',', '.') . ' Ft',
+            'location' => $order['customer_address'] ?? '',
+        ];
+        return 'https://calendar.google.com/calendar/render?' . http_build_query($params);
+    }
+
+    /**
      * Admin értesítés: megrendelő elfogadta az árajánlatot
      *
      * @param array $order        Megrendelés adatai
