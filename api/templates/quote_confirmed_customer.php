@@ -122,7 +122,11 @@ function getQuoteConfirmedCustomerHtml(array $order, array $selectedSlot, string
     <!-- Footer -->
     <tr>
         <td style="background:#2C3E50;padding:22px 40px;text-align:center;">
-            <img src="https://veresvill.hu/veresvill_logo.webp" alt="Veresvill" style="max-width:110px;height:auto;margin-bottom:6px;">
+            <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 8px;">
+                <tr><td style="background:#FFFFFF;padding:8px 16px;border-radius:8px;">
+                    <img src="https://veresvill.hu/veresvill_logo.webp" alt="Veresvill" width="110" style="display:block;max-width:110px;height:auto;">
+                </td></tr>
+            </table>
             <p style="color:rgba(255,255,255,.6);margin:0;font-size:12px;">Villamos Biztonsági Felülvizsgálat</p>
         </td>
     </tr>

@@ -321,7 +321,11 @@ function getAdminEmailHtml($name, $email, $phone, $address, $propertyLabel, $siz
     <!-- Header -->
     <tr>
         <td style="background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%); padding: 30px 40px; text-align: center;">
-            <img src="https://veresvill.hu/veresvill_logo.webp" alt="VeresvVill" style="max-width: 200px; height: auto; margin-bottom: 10px;">
+            <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 10px;">
+                <tr><td style="background:#FFFFFF;padding:10px 24px;border-radius:10px;">
+                    <img src="https://veresvill.hu/veresvill_logo.webp" alt="VeresvVill" width="200" style="display:block;max-width:200px;height:auto;">
+                </td></tr>
+            </table>
             <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0; font-size: 14px;">Villamos Biztonsági Felülvizsgálat</p>
         </td>
     </tr>
@@ -398,7 +402,11 @@ function getAdminEmailHtml($name, $email, $phone, $address, $propertyLabel, $siz
     <!-- Footer -->
     <tr>
         <td style="background: #2C3E50; padding: 20px 40px; text-align: center;">
-            <img src="https://veresvill.hu/veresvill_logo.webp" alt="VeresvVill" style="max-width: 120px; height: auto; margin-bottom: 8px;">
+            <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 8px;">
+                <tr><td style="background:#FFFFFF;padding:8px 18px;border-radius:8px;">
+                    <img src="https://veresvill.hu/veresvill_logo.webp" alt="VeresvVill" width="120" style="display:block;max-width:120px;height:auto;">
+                </td></tr>
+            </table>
             <p style="color: rgba(255,255,255,0.7); margin: 0; font-size: 12px;">Villamos Biztonsági Felülvizsgálat | Ez egy automatikus értesítés</p>
         </td>
     </tr>
@@ -451,7 +459,11 @@ function getCustomerEmailHtml($name, $email, $phone, $address, $propertyLabel, $
     <!-- Header -->
     <tr>
         <td style="background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%); padding: 35px 40px; text-align: center;">
-            <img src="https://veresvill.hu/veresvill_logo.webp" alt="VeresvVill" style="max-width: 200px; height: auto; margin-bottom: 10px;">
+            <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 10px;">
+                <tr><td style="background:#FFFFFF;padding:10px 24px;border-radius:10px;">
+                    <img src="https://veresvill.hu/veresvill_logo.webp" alt="VeresvVill" width="200" style="display:block;max-width:200px;height:auto;">
+                </td></tr>
+            </table>
             <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0; font-size: 14px;">Villamos Biztonsági Felülvizsgálat</p>
         </td>
     </tr>
@@ -586,7 +598,11 @@ function getCustomerEmailHtml($name, $email, $phone, $address, $propertyLabel, $
     <!-- Footer -->
     <tr>
         <td style="background: #2C3E50; padding: 25px 40px; text-align: center;">
-            <img src="https://veresvill.hu/veresvill_logo.webp" alt="VeresvVill" style="max-width: 120px; height: auto; margin-bottom: 8px;">
+            <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 8px;">
+                <tr><td style="background:#FFFFFF;padding:8px 18px;border-radius:8px;">
+                    <img src="https://veresvill.hu/veresvill_logo.webp" alt="VeresvVill" width="120" style="display:block;max-width:120px;height:auto;">
+                </td></tr>
+            </table>
             <p style="color: rgba(255,255,255,0.6); margin: 0; font-size: 12px;">Villamos Biztonsági Felülvizsgálat - Budapest és Pest megye</p>
             <p style="color: rgba(255,255,255,0.4); margin: 10px 0 0; font-size: 11px;">Ez egy automatikus visszaigazolás. Kérjük, ne válaszoljon erre az emailre.</p>
         </td>
