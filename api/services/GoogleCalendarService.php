@@ -429,20 +429,31 @@ class GoogleCalendarService {
 
         error_log('Sheets row out: ' . json_encode($rowOut, JSON_UNESCAPED_UNICODE));
 
-        $values = [$rowOut];
         $colLetter = self::columnLetter(count($headers));
-        // A fejléc a 3. sorban van — az append a 3. sortól keresi a tábla aljat
-        $range = $sheetTab . '!A3:' . $colLetter;
-        $url = self::SHEETS_API . '/spreadsheets/' . urlencode($sheetId) . '/values/' . rawurlencode($range)
-             . ':append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS';
 
-        $response = self::httpRequest('POST', $url, $accessToken, ['values' => $values]);
+        // Megkeressuk az elso ures sort a B oszlop (Forras) alapjan — stabilabb
+        // mint az append, ami rejtett / #REF! cellak miatt elcsuszhat.
+        $bRange = $sheetTab . '!B4:B';
+        $bUrl = self::SHEETS_API . '/spreadsheets/' . urlencode($sheetId)
+              . '/values/' . rawurlencode($bRange);
+        $bResp = self::httpRequest('GET', $bUrl, $accessToken);
+        $bValues = $bResp['values'] ?? [];
+        $targetRow = 4 + count($bValues); // elso ures sor a fejlec alatt
 
-        if ($response && isset($response['updates'])) {
+        $putRange = $sheetTab . '!A' . $targetRow . ':' . $colLetter . $targetRow;
+        $url = self::SHEETS_API . '/spreadsheets/' . urlencode($sheetId)
+             . '/values/' . rawurlencode($putRange)
+             . '?valueInputOption=USER_ENTERED';
+
+        error_log('Sheets target row: ' . $targetRow . ' (range: ' . $putRange . ')');
+
+        $response = self::httpRequest('PUT', $url, $accessToken, ['values' => [$rowOut]]);
+
+        if ($response && isset($response['updatedRange'])) {
             return true;
         }
 
-        error_log('Sheets append error: ' . json_encode($response));
+        error_log('Sheets write error: ' . json_encode($response));
         return false;
     }
 
