@@ -372,6 +372,14 @@ class QuoteController {
         // Push értesítés küldése (placeholder - PushService még nem létezik)
         // PushService::notifyNewAppointment($slot['worker_id'], $order['id'], $slot);
 
+        // Google Sheets: elfogadott időpont új sorként (nem kritikus)
+        try {
+            require_once __DIR__ . '/../services/GoogleCalendarService.php';
+            GoogleCalendarService::appendAcceptedSlotRow($order, $slot);
+        } catch (\Exception $sheetErr) {
+            error_log('Sheets append exception: ' . $sheetErr->getMessage());
+        }
+
         Response::success([
             'order_id' => $order['id'],
             'slot'     => $slot,

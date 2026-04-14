@@ -12,7 +12,8 @@ class GoogleCalendarService {
     private const AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
     private const TOKEN_URL = 'https://oauth2.googleapis.com/token';
     private const CALENDAR_API = 'https://www.googleapis.com/calendar/v3';
-    private const SCOPES = 'https://www.googleapis.com/auth/calendar';
+    private const SHEETS_API = 'https://sheets.googleapis.com/v4';
+    private const SCOPES = 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/spreadsheets';
 
     // ============================================
     // OAuth2 Flow
@@ -355,6 +356,72 @@ class GoogleCalendarService {
         }
 
         return ['synced' => $synced, 'total' => count($events)];
+    }
+
+    // ============================================
+    // Google Sheets — elfogadott időpont export
+    // ============================================
+
+    /**
+     * Elfogadott időpont sor hozzáfűzése a Google Sheet-hez.
+     *
+     * Oszlopok: Forrás | Állapot | Ki megy? | Cím | Név | Telefon | Ár | Határidő | Időpont? | Dátum | Idő
+     */
+    public static function appendAcceptedSlotRow(array $order, array $slot): bool {
+        $sheetId = env('GOOGLE_SHEET_ID');
+        $sheetTab = env('GOOGLE_SHEET_TAB', 'Sheet1');
+        if (!$sheetId) {
+            error_log('Sheets append skipped: GOOGLE_SHEET_ID nincs beallitva');
+            return false;
+        }
+
+        // Tokent tetszőleges csatlakoztatott admin user-hez találhatunk
+        $pdo = getDbConnection();
+        $stmt = $pdo->query("SELECT user_id FROM vv_google_tokens WHERE sync_enabled = 1 ORDER BY id ASC LIMIT 1");
+        $row = $stmt->fetch();
+        if (!$row) {
+            error_log('Sheets append skipped: nincs csatlakoztatott Google fiok');
+            return false;
+        }
+        $userId = (int) $row['user_id'];
+
+        $accessToken = self::getValidToken($userId);
+        if (!$accessToken) {
+            error_log('Sheets append skipped: nincs ervenyes access token');
+            return false;
+        }
+
+        // Sor összeállítása
+        $datumHu = date('Y.m.d.', strtotime($slot['slot_date']));
+        $ido     = substr($slot['slot_start'], 0, 5);
+        $nevEmail = trim(($order['customer_name'] ?? '') . ' ' . ($order['customer_email'] ?? ''));
+
+        $values = [[
+            'veresvill',                       // Forrás
+            'Felmérni',                         // Állapot
+            'Szebasztián',                      // Ki megy?
+            $order['customer_address'] ?? '',   // Cím
+            $nevEmail,                          // Név
+            $order['customer_phone'] ?? '',     // Telefon
+            (int) ($order['quote_amount'] ?? 0),// Ár
+            '',                                 // Határidő
+            'Nem mozgatható',                   // Időpont?
+            $datumHu,                           // Dátum
+            $ido,                               // Idő
+        ]];
+
+        $range = $sheetTab . '!A:K';
+        $url = self::SHEETS_API . '/spreadsheets/' . urlencode($sheetId) . '/values/' . rawurlencode($range)
+             . ':append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS';
+
+        $response = self::httpRequest('POST', $url, $accessToken, ['values' => $values]);
+
+        if ($response && isset($response['updates'])) {
+            return true;
+        }
+
+        error_log('Sheets append error: ' . json_encode($response));
+        return false;
     }
 
     // ============================================
