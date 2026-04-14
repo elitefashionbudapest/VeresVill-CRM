@@ -364,8 +364,7 @@ class GoogleCalendarService {
 
     /**
      * Elfogadott időpont sor hozzáfűzése a Google Sheet-hez.
-     *
-     * Oszlopok: Forrás | Állapot | Ki megy? | Cím | Név | Telefon | Ár | Határidő | Időpont? | Dátum | Idő
+     * A fejléc nevek alapján tölti a cellákat (rejtett/átrendezett oszlopok is jók).
      */
     public static function appendAcceptedSlotRow(array $order, array $slot): bool {
         $sheetId = env('GOOGLE_SHEET_ID');
@@ -391,39 +390,45 @@ class GoogleCalendarService {
             return false;
         }
 
-        // Sor összeállítása
+        // 1) Fejléc sor lekérése (első 50 oszlop elég bőven)
+        $headerRange = $sheetTab . '!1:1';
+        $headerUrl = self::SHEETS_API . '/spreadsheets/' . urlencode($sheetId)
+                   . '/values/' . rawurlencode($headerRange);
+        $headerResp = self::httpRequest('GET', $headerUrl, $accessToken);
+        $headers = $headerResp['values'][0] ?? [];
+        if (empty($headers)) {
+            error_log('Sheets append error: nincs fejlec az elso sorban');
+            return false;
+        }
+
+        // 2) Mezo -> ertek parosok (fejlec nev alapjan toltunk)
         $datumHu = date('Y.m.d.', strtotime($slot['slot_date']));
         $ido     = substr($slot['slot_start'], 0, 5);
         $nevEmail = trim(($order['customer_name'] ?? '') . ' ' . ($order['customer_email'] ?? ''));
 
-        $values = [[
-            'veresvill',                        // A  Forrás
-            '',                                 // B  Állapot (üres)
-            'Szebasztián',                      // C  Ki megy?
-            'TESZT ' . ($order['customer_address'] ?? ''), // D  Cím
-            $nevEmail,                          // E  Név
-            $order['customer_phone'] ?? '',     // F  Telefon
-            (int) ($order['quote_amount'] ?? 0),// G  Ár
-            '',                                 // H  Határidő
-            'Nem mozgatható',                   // I  Időpont?
-            $datumHu,                           // J  Dátum
-            $ido,                               // K  Idő
-            '',                                 // L  Felmérés?
-            '',                                 // M  Fizetett?
-            '',                                 // N  Kiküldve?
-            '',                                 // O  Megjegyzés
-            '',                                 // P  Elszámolás?
-            '',                                 // Q  Elszámolandó
-            '',                                 // R  Hibakereső
-            '',                                 // S
-            '',                                 // T
-            '',                                 // U
-            '',                                 // V
-            '',                                 // W
-            'TRUE',                             // X  Változás?
-        ]];
+        $fieldMap = [
+            'forrás'     => 'veresvill',
+            'ki megy?'   => 'Szebasztián',
+            'cím'        => 'TESZT ' . ($order['customer_address'] ?? ''),
+            'név'        => $nevEmail,
+            'telefon'    => $order['customer_phone'] ?? '',
+            'ár'         => (int) ($order['quote_amount'] ?? 0),
+            'időpont?'   => 'Nem mozgatható',
+            'dátum'      => $datumHu,
+            'idő'        => $ido,
+            'változás?'  => 'TRUE',
+        ];
 
-        $range = $sheetTab . '!A:X';
+        // 3) Sor epitese a fejlec sorrendjeben
+        $rowOut = [];
+        foreach ($headers as $header) {
+            $key = mb_strtolower(trim((string) $header));
+            $rowOut[] = $fieldMap[$key] ?? '';
+        }
+
+        $values = [$rowOut];
+        $colLetter = self::columnLetter(count($headers));
+        $range = $sheetTab . '!A:' . $colLetter;
         $url = self::SHEETS_API . '/spreadsheets/' . urlencode($sheetId) . '/values/' . rawurlencode($range)
              . ':append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS';
 
@@ -461,6 +466,19 @@ class GoogleCalendarService {
                 'timeZone' => 'Europe/Budapest',
             ],
         ];
+    }
+
+    /**
+     * 1-based oszlop szám -> Sheets oszlop betű (1 -> A, 27 -> AA)
+     */
+    private static function columnLetter(int $n): string {
+        $s = '';
+        while ($n > 0) {
+            $n--;
+            $s = chr(65 + ($n % 26)) . $s;
+            $n = intdiv($n, 26);
+        }
+        return $s ?: 'A';
     }
 
     /**
