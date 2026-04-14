@@ -254,7 +254,7 @@ class QuoteController {
 
         // Megrendelés lekérése token alapján
         $stmt = $pdo->prepare("
-            SELECT o.id, o.status, o.quote_token_expires, o.customer_name, o.customer_address
+            SELECT o.*
             FROM vv_orders o
             WHERE o.quote_token = ?
             LIMIT 1
