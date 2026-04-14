@@ -1,0 +1,4 @@
+# Keresok szamara tiltott: admin felulet
+<IfModule mod_headers.c>
+    Header set X-Robots-Tag "noindex, nofollow, noarchive, nosnippet"
+</IfModule>

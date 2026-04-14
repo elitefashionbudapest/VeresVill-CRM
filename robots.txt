@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /api/
+Disallow: /install.php
+Disallow: /send_mail.php
+
+Sitemap: https://veresvill.hu/sitemap.xml
