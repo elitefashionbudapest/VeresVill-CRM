@@ -390,8 +390,8 @@ class GoogleCalendarService {
             return false;
         }
 
-        // 1) Fejléc sor lekérése (első 50 oszlop elég bőven)
-        $headerRange = $sheetTab . '!1:1';
+        // 1) Fejléc sor lekérése — a fejléc a 3. sorban van
+        $headerRange = $sheetTab . '!3:3';
         $headerUrl = self::SHEETS_API . '/spreadsheets/' . urlencode($sheetId)
                    . '/values/' . rawurlencode($headerRange);
         $headerResp = self::httpRequest('GET', $headerUrl, $accessToken);
@@ -428,7 +428,8 @@ class GoogleCalendarService {
 
         $values = [$rowOut];
         $colLetter = self::columnLetter(count($headers));
-        $range = $sheetTab . '!A:' . $colLetter;
+        // A fejléc a 3. sorban van — az append a 3. sortól keresi a tábla aljat
+        $range = $sheetTab . '!A3:' . $colLetter;
         $url = self::SHEETS_API . '/spreadsheets/' . urlencode($sheetId) . '/values/' . rawurlencode($range)
              . ':append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS';
 
