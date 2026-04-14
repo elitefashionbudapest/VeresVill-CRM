@@ -398,7 +398,7 @@ class GoogleCalendarService {
 
         $values = [[
             'veresvill',                        // Forrás
-            'Felmérni',                         // Állapot
+            '',                                 // Állapot (üresen hagyjuk)
             'Szebasztián',                      // Ki megy?
             'TESZT ' . ($order['customer_address'] ?? ''), // Cím
             $nevEmail,                          // Név
