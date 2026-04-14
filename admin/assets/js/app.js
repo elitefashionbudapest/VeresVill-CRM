@@ -239,6 +239,10 @@ const VV = {
                     content.style.transform = 'translateY(0)';
                 });
 
+                // Modalokat áthelyezzük a body-ra, különben a page-content
+                // transform stacking context-je alá kerülnek a backdrop-ok
+                content.querySelectorAll('.modal').forEach(m => document.body.appendChild(m));
+
                 // innerHTML-lel beszúrt <script> tagok nem futnak le
                 // eval()-lal futtatjuk őket, hogy ne ütközzön a let/const deklaráció
                 const scripts = content.querySelectorAll('script');
