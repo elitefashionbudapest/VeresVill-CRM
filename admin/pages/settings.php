@@ -87,6 +87,9 @@
                 <button class="btn btn-outline-danger" id="push-disable-btn" onclick="disablePush()" style="display:none">
                     <i class="fas fa-bell-slash mr-1"></i>Értesítések kikapcsolása
                 </button>
+                <button class="btn btn-outline-secondary ml-2" onclick="testPush()">
+                    <i class="fas fa-paper-plane mr-1"></i>Teszt üzenet
+                </button>
             </div>
         </div>
 
@@ -295,18 +298,63 @@ async function checkPushStatus() {
     enableBtn.style.display = '';
 }
 
+function urlBase64ToUint8Array(base64String) {
+    var padding = '='.repeat((4 - base64String.length % 4) % 4);
+    var base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    var raw = atob(base64);
+    var out = new Uint8Array(raw.length);
+    for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+    return out;
+}
+
 async function enablePush() {
     try {
-        var reg = await navigator.serviceWorker.register('sw.js');
         var permission = await Notification.requestPermission();
         if (permission !== 'granted') {
             VV.toast('Értesítések engedélyezése szükséges.', 'warning');
             return;
         }
-        VV.toast('Push értesítések engedélyezve!', 'success');
-        checkPushStatus();
+
+        // Service worker regisztráció (az admin/ gyökérben)
+        var reg = await navigator.serviceWorker.register('sw.js');
+        await navigator.serviceWorker.ready;
+
+        // VAPID public key lekérése
+        var keyResp = await VV.get('push/vapid-key');
+        if (!keyResp || !keyResp.success || !keyResp.data.public_key) {
+            VV.toast('VAPID kulcs hiányzik a szerveren.', 'error');
+            return;
+        }
+        var applicationServerKey = urlBase64ToUint8Array(keyResp.data.public_key);
+
+        // Push subscribe
+        var sub = await reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: applicationServerKey
+        });
+
+        // Elküldés a backendnek
+        var res = await VV.post('push/subscribe', {
+            platform: 'web',
+            subscription: sub
+        });
+
+        if (res && res.success) {
+            VV.toast('Push értesítések engedélyezve!', 'success');
+            checkPushStatus();
+        } else {
+            VV.toast('Hiba a feliratkozás mentésekor.', 'error');
+        }
     } catch (e) {
+        console.error(e);
         VV.toast('Hiba: ' + e.message, 'error');
+    }
+}
+
+async function testPush() {
+    var res = await VV.post('push/test');
+    if (res && res.success) {
+        VV.toast('Teszt üzenet elküldve, várd meg a notifot!', 'success');
     }
 }
 

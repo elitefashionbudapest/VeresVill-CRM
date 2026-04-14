@@ -5,6 +5,30 @@
 class NotificationController {
 
     /**
+     * GET push/vapid-key
+     * Visszaadja a VAPID public key-t a kliensnek push subscribe-hoz
+     */
+    public function vapidKey(): void {
+        $key = env('VAPID_PUBLIC_KEY', '');
+        Response::success(['public_key' => $key]);
+    }
+
+    /**
+     * POST push/test
+     * Teszt push értesítés küldése a jelenlegi usernek
+     */
+    public function testPush(): void {
+        $user = Auth::user();
+        require_once __DIR__ . '/../services/PushService.php';
+        PushService::sendToUser(
+            (int) $user['id'],
+            'Teszt értesítés',
+            'Ha ezt látod, a push működik.'
+        );
+        Response::success(null, 'Teszt értesítés elküldve.');
+    }
+
+    /**
      * POST push/subscribe
      * Push értesítés feliratkozás mentése
      */

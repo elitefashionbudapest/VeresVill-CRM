@@ -66,8 +66,10 @@ $routes = [
     ['PUT',    'users/(\d+)',                    'UserController',         'update',          'admin'],
 
     // Push notifications
+    ['GET',    'push/vapid-key',                'NotificationController', 'vapidKey',        'auth'],
     ['POST',   'push/subscribe',                'NotificationController', 'subscribe',       'auth'],
     ['DELETE', 'push/subscribe',                'NotificationController', 'unsubscribe',     'auth'],
+    ['POST',   'push/test',                     'NotificationController', 'testPush',        'auth'],
 
     // Dashboard
     ['GET',    'dashboard/stats',               'DashboardController',    'stats',           'auth'],
