@@ -397,10 +397,10 @@ class GoogleCalendarService {
         $nevEmail = trim(($order['customer_name'] ?? '') . ' ' . ($order['customer_email'] ?? ''));
 
         $values = [[
-            'TESZT veresvill',                  // Forrás
+            'veresvill',                        // Forrás
             'Felmérni',                         // Állapot
             'Szebasztián',                      // Ki megy?
-            $order['customer_address'] ?? '',   // Cím
+            'TESZT ' . ($order['customer_address'] ?? ''), // Cím
             $nevEmail,                          // Név
             $order['customer_phone'] ?? '',     // Telefon
             (int) ($order['quote_amount'] ?? 0),// Ár
