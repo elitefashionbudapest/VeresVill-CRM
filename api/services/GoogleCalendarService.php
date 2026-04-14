@@ -400,6 +400,7 @@ class GoogleCalendarService {
             error_log('Sheets append error: nincs fejlec az elso sorban');
             return false;
         }
+        error_log('Sheets headers (count=' . count($headers) . '): ' . json_encode($headers, JSON_UNESCAPED_UNICODE));
 
         // 2) Mezo -> ertek parosok (fejlec nev alapjan toltunk)
         $datumHu = date('Y.m.d.', strtotime($slot['slot_date']));
@@ -425,6 +426,8 @@ class GoogleCalendarService {
             $key = mb_strtolower(trim((string) $header));
             $rowOut[] = $fieldMap[$key] ?? '';
         }
+
+        error_log('Sheets row out: ' . json_encode($rowOut, JSON_UNESCAPED_UNICODE));
 
         $values = [$rowOut];
         $colLetter = self::columnLetter(count($headers));
