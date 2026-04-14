@@ -982,19 +982,48 @@
         });
     </script>
     <script>
-        // reCAPTCHA lazy load - csak az űrlap közelébe scrolloláskor
+        // reCAPTCHA + Google Places Autocomplete lazy load
+        // Csak az űrlap közelébe scrolloláskor töltődnek be
         (function() {
             var loaded = false;
             var form = document.getElementById('kapcsolat');
             if (!form) return;
+
+            // reCAPTCHA script-be inicializálása után fut
+            window.initVVPlaces = function() {
+                var input = document.getElementById('address');
+                if (!input || !google || !google.maps || !google.maps.places) return;
+                var ac = new google.maps.places.Autocomplete(input, {
+                    componentRestrictions: { country: 'hu' },
+                    fields: ['formatted_address'],
+                    types: ['address']
+                });
+                ac.addListener('place_changed', function() {
+                    var place = ac.getPlace();
+                    if (place && place.formatted_address) {
+                        input.value = place.formatted_address;
+                    }
+                });
+            };
+
             var observer = new IntersectionObserver(function(entries) {
                 if (entries[0].isIntersecting && !loaded) {
                     loaded = true;
+
+                    // reCAPTCHA
                     var s = document.createElement('script');
                     s.src = 'https://www.google.com/recaptcha/api.js';
                     s.async = true;
                     s.defer = true;
                     document.head.appendChild(s);
+
+                    // Google Places
+                    var m = document.createElement('script');
+                    m.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyC4776N1_teO_rEgEUuJpOBwtr1Xe7UYHo&libraries=places&language=hu&callback=initVVPlaces';
+                    m.async = true;
+                    m.defer = true;
+                    document.head.appendChild(m);
+
                     observer.disconnect();
                 }
             }, { rootMargin: '500px' });
