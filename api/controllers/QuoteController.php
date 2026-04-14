@@ -372,28 +372,12 @@ class QuoteController {
         // Push értesítés küldése (placeholder - PushService még nem létezik)
         // PushService::notifyNewAppointment($slot['worker_id'], $order['id'], $slot);
 
-        // Google Sheets + Google Naptár (nem kritikus)
+        // Google Sheets: elfogadott időpont új sorként (nem kritikus)
         try {
             require_once __DIR__ . '/../services/GoogleCalendarService.php';
-
-            // 1) Google Sheet — új sor
             GoogleCalendarService::appendAcceptedSlotRow($order, $slot);
-
-            // 2) Google Naptár — esemény a csatlakoztatott fiók naptárába
-            $stmt = $pdo->prepare("SELECT user_id FROM vv_google_tokens WHERE sync_enabled = 1 ORDER BY id ASC LIMIT 1");
-            $stmt->execute();
-            $gRow = $stmt->fetch();
-            if ($gRow) {
-                $gUserId = (int) $gRow['user_id'];
-                $stmt = $pdo->prepare("SELECT * FROM vv_calendar_events WHERE order_id = ? ORDER BY id DESC LIMIT 1");
-                $stmt->execute([$order['id']]);
-                $calEvent = $stmt->fetch();
-                if ($calEvent) {
-                    GoogleCalendarService::createEvent($gUserId, $calEvent);
-                }
-            }
         } catch (\Exception $sheetErr) {
-            error_log('Google sync exception on accept: ' . $sheetErr->getMessage());
+            error_log('Sheets append exception: ' . $sheetErr->getMessage());
         }
 
         Response::success([
