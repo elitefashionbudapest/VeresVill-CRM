@@ -281,7 +281,7 @@ try {
 }
 
 // Siker
-echo json_encode(['success' => true, 'message' => 'Köszönjük megkeresését! Kollégánk 60 percen belül felveszi Önnel a kapcsolatot.']);
+echo json_encode(['success' => true, 'message' => 'Köszönjük megkeresését! 60 percen belül árajánlatot küldünk Önnek emailben.']);
 exit;
 
 // ============================================
@@ -458,7 +458,7 @@ function getCustomerEmailHtml($name, $email, $phone, $address, $propertyLabel, $
         <td style="padding: 35px 40px 20px;">
             <h2 style="color: #2C3E50; font-size: 24px; margin: 0 0 15px;">Kedves {$firstName}!</h2>
             <p style="color: #5A6C7D; font-size: 16px; line-height: 1.7; margin: 0;">
-                Köszönjük megkeresését! Megrendelését sikeresen rögzítettük. Kollégánk <strong style="color: #FF6B6B;">60 percen belül</strong> felveszi Önnel a kapcsolatot a megadott telefonszámon.
+                Köszönjük megkeresését! Megrendelését sikeresen rögzítettük. <strong style="color: #FF6B6B;">60 percen belül</strong> árajánlatot küldünk Önnek erre az email címre, választható időpontokkal.
             </p>
         </td>
     </tr>
@@ -469,7 +469,7 @@ function getCustomerEmailHtml($name, $email, $phone, $address, $propertyLabel, $
             <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                     <td style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: #FFFFFF; padding: 18px 25px; border-radius: 12px; text-align: center;">
-                        <p style="margin: 0; font-size: 15px; font-weight: 700;">✓ Ha nem hívjuk vissza 60 percen belül: -3.000 Ft kedvezmény!</p>
+                        <p style="margin: 0; font-size: 15px; font-weight: 700;">✓ Ha nem küldünk árajánlatot 60 percen belül: -3.000 Ft kedvezmény!</p>
                     </td>
                 </tr>
             </table>
@@ -516,8 +516,8 @@ function getCustomerEmailHtml($name, $email, $phone, $address, $propertyLabel, $
                         <div style="background: #4A90E2; color: #FFFFFF; width: 36px; height: 36px; border-radius: 50%; text-align: center; line-height: 36px; font-weight: 700; font-size: 16px;">1</div>
                     </td>
                     <td style="padding: 5px 0 15px;">
-                        <p style="margin: 0; color: #2C3E50; font-weight: 600; font-size: 15px;">Visszahívjuk 60 percen belül</p>
-                        <p style="margin: 4px 0 0; color: #5A6C7D; font-size: 13px;">Egyeztetjük az időpontot és a részleteket</p>
+                        <p style="margin: 0; color: #2C3E50; font-weight: 600; font-size: 15px;">Árajánlatot küldünk 60 percen belül</p>
+                        <p style="margin: 4px 0 0; color: #5A6C7D; font-size: 13px;">Emailben kap tőlünk árajánlatot választható időpontokkal</p>
                     </td>
                 </tr>
             </table>
@@ -563,7 +563,7 @@ function getCustomerEmailHtml($name, $email, $phone, $address, $propertyLabel, $
                                 <td style="padding: 6px 0; color: #2C3E50; font-size: 14px;">✅ <strong>Pontossági garancia:</strong> 30 perc késés = -3.000 Ft</td>
                             </tr>
                             <tr>
-                                <td style="padding: 6px 0; color: #2C3E50; font-size: 14px;">✅ <strong>Visszahívási garancia:</strong> 60 perc = -3.000 Ft</td>
+                                <td style="padding: 6px 0; color: #2C3E50; font-size: 14px;">✅ <strong>Ajánlat garancia:</strong> 60 percen belül árajánlat = vagy -3.000 Ft</td>
                             </tr>
                         </table>
                     </td>
@@ -604,15 +604,15 @@ function getCustomerEmailText($name, $address, $urgencyLabel, $dateTime) {
     $firstName = explode(' ', $name)[0];
     $text = "Kedves {$firstName}!\n\n";
     $text .= "Köszönjük megkeresését! Megrendelését sikeresen rögzítettük.\n";
-    $text .= "Kollégánk 60 percen belül felveszi Önnel a kapcsolatot.\n\n";
-    $text .= "Ha nem hívjuk vissza 60 percen belül: -3.000 Ft kedvezmény!\n\n";
+    $text .= "60 percen belül árajánlatot küldünk Önnek emailben, választható időpontokkal.\n\n";
+    $text .= "Ha nem küldünk árajánlatot 60 percen belül: -3.000 Ft kedvezmény!\n\n";
     $text .= "Helyszín: {$address}\n";
     $text .= "Igényelt határidő: {$urgencyLabel}\n";
     $text .= "Beérkezés: {$dateTime}\n\n";
     $text .= "Garanciáink:\n";
     $text .= "- A jegyzőkönyv a mérést követő munkanapon garantáltan kész!\n";
     $text .= "- 30 perc késés = -3.000 Ft kedvezmény\n";
-    $text .= "- 60 perc visszahívás = -3.000 Ft kedvezmény\n\n";
+    $text .= "- Ajánlat 60 percen belül = vagy -3.000 Ft kedvezmény\n\n";
     $text .= "Üdvözlettel,\nVeresvill csapata\nveresvill.ads@gmail.com";
     return $text;
 }
