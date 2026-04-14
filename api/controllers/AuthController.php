@@ -15,10 +15,36 @@ class AuthController {
         $v = new Validator($input);
         $v->required('email', 'E-mail cím')
           ->email('email', 'E-mail cím')
-          ->required('password', 'Jelszó');
+          ->required('password', 'Jelszó')
+          ->required('recaptcha', 'reCAPTCHA');
 
         if ($v->fails()) {
             Response::error($v->firstError(), 422, $v->errors());
+        }
+
+        // reCAPTCHA ellenőrzés (teszt módban kihagyva)
+        if (env('APP_DEBUG') !== 'true') {
+            $secret = env('RECAPTCHA_SECRET');
+            if (empty($secret)) {
+                Response::error('reCAPTCHA nincs beállítva a szerveren.', 500);
+            }
+            $ch = curl_init('https://www.google.com/recaptcha/api/siteverify');
+            curl_setopt_array($ch, [
+                CURLOPT_POST           => true,
+                CURLOPT_POSTFIELDS     => http_build_query([
+                    'secret'   => $secret,
+                    'response' => $input['recaptcha'] ?? '',
+                    'remoteip' => $_SERVER['REMOTE_ADDR'] ?? '',
+                ]),
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_TIMEOUT        => 10,
+            ]);
+            $verify = curl_exec($ch);
+            curl_close($ch);
+            $verifyData = json_decode($verify, true);
+            if (!$verifyData || empty($verifyData['success'])) {
+                Response::error('reCAPTCHA ellenőrzés sikertelen. Próbálja újra.', 422);
+            }
         }
 
         $email    = $v->get('email');

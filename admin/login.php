@@ -194,6 +194,9 @@
                         <label for="login-password">Jelszó</label>
                         <input type="password" id="login-password" class="form-control" placeholder="Jelszó" required>
                     </div>
+                    <div class="form-group-modern" style="display:flex;justify-content:center;">
+                        <div class="g-recaptcha" data-sitekey="6LeSaLcsAAAAAAn62qYS_ij6_sZCUpARPTAF0IqM"></div>
+                    </div>
                     <button type="submit" id="login-btn" class="btn-login">
                         Bejelentkezés
                     </button>
@@ -205,6 +208,8 @@
         </div>
     </div>
 
+    <!-- reCAPTCHA v2 -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <!-- jQuery -->
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
     <!-- Bootstrap 4 -->
@@ -226,6 +231,13 @@
         const errorDiv = document.getElementById('login-error');
         const email = document.getElementById('login-email').value.trim();
         const password = document.getElementById('login-password').value;
+        const captcha = (typeof grecaptcha !== 'undefined') ? grecaptcha.getResponse() : '';
+
+        if (!captcha) {
+            errorDiv.textContent = 'Kérjük, igazolja hogy nem robot!';
+            errorDiv.classList.remove('d-none');
+            return;
+        }
 
         errorDiv.classList.add('d-none');
         btn.disabled = true;
@@ -236,7 +248,7 @@
             const res = await fetch(apiBase + '/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify({ email, password, recaptcha: captcha })
             });
 
             const data = await res.json();
@@ -248,10 +260,12 @@
             } else {
                 errorDiv.textContent = data.message || 'Hibás email vagy jelszó.';
                 errorDiv.classList.remove('d-none');
+                if (typeof grecaptcha !== 'undefined') grecaptcha.reset();
             }
         } catch (err) {
             errorDiv.textContent = 'Hálózati hiba. Próbálja újra később.';
             errorDiv.classList.remove('d-none');
+            if (typeof grecaptcha !== 'undefined') grecaptcha.reset();
         } finally {
             btn.disabled = false;
             btn.innerHTML = 'Bejelentkezés';
