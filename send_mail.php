@@ -237,9 +237,8 @@ try {
 }
 
 // ============================================
-// Visszaigazoló email a MEGRENDELŐNEK (teszt módban kihagyva)
+// Visszaigazoló email a MEGRENDELŐNEK
 // ============================================
-if (env('APP_DEBUG') !== 'true') {
 try {
     $customerMail = new PHPMailer(true);
     $customerMail->CharSet = 'UTF-8';
@@ -254,6 +253,7 @@ try {
     $customerMail->Port       = SMTP_PORT;
 
     $customerMail->setFrom(FROM_EMAIL, FROM_NAME);
+    $customerMail->Sender = FROM_EMAIL;
     $customerMail->addAddress($email, $name);
     $customerMail->addReplyTo(ADMIN_EMAIL, ADMIN_NAME);
 
@@ -264,9 +264,8 @@ try {
 
     $customerMail->send();
 } catch (Exception $e) {
-    // A megrendelő email hiba nem kritikus, az admin emailt már elküldtük
+    error_log('Customer mail error: ' . $e->getMessage());
 }
-} // end APP_DEBUG email skip
 
 // Siker
 echo json_encode(['success' => true, 'message' => 'Köszönjük megkeresését! Kollégánk 60 percen belül felveszi Önnel a kapcsolatot.']);
