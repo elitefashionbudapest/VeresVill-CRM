@@ -394,7 +394,7 @@ var slotPickerBusy = [];     // foglalt időpontok az API-ból
 
 const SLOT_HOURS = [8,9,10,11,12,13,14,15,16]; // 8:00-17:00
 const SLOT_DAY_NAMES = ['Hé','Ke','Sze','Csü','Pé','Szo','Va'];
-const SLOT_MAX = 3;
+const SLOT_MAX = 8;
 
 function initSlotPicker() {
     // Következő hétfő
