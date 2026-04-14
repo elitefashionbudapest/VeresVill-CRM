@@ -46,15 +46,13 @@ class GoogleCalendarController {
         // Token mentése
         GoogleCalendarService::saveToken($userId, $tokenData);
 
-        // Első szinkron — CRM események feltöltése Google-be
-        $pushResult = GoogleCalendarService::pushAllToGoogle($userId);
-
-        // Google események behúzása CRM-be
+        // Első szinkron — Google események behúzása CRM-be (push megszűnt)
         $pullResult = GoogleCalendarService::syncFromGoogle($userId);
 
+        $importedCount = $pullResult['created'] ?? 0;
         $this->renderCallbackPage(
             'Sikeres csatlakozás!',
-            "Google Naptár csatlakoztatva. {$pushResult['synced']} esemény feltöltve, {$pullResult['created']} esemény importálva.",
+            "Google Naptár csatlakoztatva. {$importedCount} esemény importálva.",
             true
         );
     }
@@ -91,10 +89,12 @@ class GoogleCalendarController {
     public function sync(): void {
         $user = Auth::user();
 
-        // CRM → Google
-        $pushResult = GoogleCalendarService::pushAllToGoogle($user['id']);
+        // Kézi szinkron → teljes újraszinkron, nem csak a változások
+        $pdo = getDbConnection();
+        $stmt = $pdo->prepare("UPDATE vv_google_tokens SET sync_token = NULL WHERE user_id = ?");
+        $stmt->execute([$user['id']]);
 
-        // Google → CRM
+        // Google → CRM (read-only pull, push megszűnt)
         $pullResult = GoogleCalendarService::syncFromGoogle($user['id']);
 
         if (isset($pullResult['error'])) {
@@ -102,7 +102,6 @@ class GoogleCalendarController {
         }
 
         Response::success([
-            'pushed'  => $pushResult,
             'pulled'  => $pullResult,
         ], 'Szinkronizálás kész.');
     }

@@ -177,17 +177,7 @@ class CalendarController {
         $eventId = (int) $pdo->lastInsertId();
 
         // Google Calendar szinkron
-        try {
-            require_once __DIR__ . '/../services/GoogleCalendarService.php';
-            $stmt = $pdo->prepare("SELECT * FROM vv_calendar_events WHERE id = ?");
-            $stmt->execute([$eventId]);
-            $newEvent = $stmt->fetch();
-            if ($newEvent) {
-                GoogleCalendarService::createEvent($targetUserId, $newEvent);
-            }
-        } catch (\Exception $e) {
-            error_log('Google sync error (create): ' . $e->getMessage());
-        }
+        // Google Calendar push megszűnt — csak CRM-ben tároljuk
 
         Response::success(['id' => $eventId], 'Esemény létrehozva.', 201);
     }
@@ -260,18 +250,7 @@ class CalendarController {
         $stmt = $pdo->prepare("UPDATE vv_calendar_events SET " . implode(', ', $sets) . " WHERE id = ?");
         $stmt->execute($params);
 
-        // Google Calendar szinkron
-        try {
-            require_once __DIR__ . '/../services/GoogleCalendarService.php';
-            $stmt = $pdo->prepare("SELECT * FROM vv_calendar_events WHERE id = ?");
-            $stmt->execute([$id]);
-            $updatedEvent = $stmt->fetch();
-            if ($updatedEvent && $updatedEvent['google_event_id']) {
-                GoogleCalendarService::updateEvent($event['user_id'], $updatedEvent);
-            }
-        } catch (\Exception $e) {
-            error_log('Google sync error (update): ' . $e->getMessage());
-        }
+        // Google Calendar push megszűnt
 
         Response::success(null, 'Esemény frissítve.');
     }
@@ -296,15 +275,7 @@ class CalendarController {
             Response::error('Nincs jogosultsága törölni ezt az eseményt.', 403);
         }
 
-        // Google Calendar szinkron — törlés
-        try {
-            require_once __DIR__ . '/../services/GoogleCalendarService.php';
-            if ($event['google_event_id']) {
-                GoogleCalendarService::deleteEvent($event['user_id'], $event['google_event_id']);
-            }
-        } catch (\Exception $e) {
-            error_log('Google sync error (delete): ' . $e->getMessage());
-        }
+        // Google Calendar push megszűnt — csak CRM-ből töröljük
 
         $stmt = $pdo->prepare("DELETE FROM vv_calendar_events WHERE id = ?");
         $stmt->execute([$id]);

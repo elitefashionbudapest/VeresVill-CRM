@@ -20,13 +20,10 @@ $users = $stmt->fetchAll();
 foreach ($users as $row) {
     $userId = (int) $row['user_id'];
 
-    // CRM → Google (új események feltöltése)
-    $push = GoogleCalendarService::pushAllToGoogle($userId);
-
-    // Google → CRM (változások lehúzása)
+    // Google → CRM (read-only pull, push megszűnt)
     $pull = GoogleCalendarService::syncFromGoogle($userId);
 
     if (php_sapi_name() === 'cli') {
-        echo "[User {$userId}] Push: {$push['synced']}/{$push['total']}, Pull: created={$pull['created']}, updated={$pull['updated']}, deleted={$pull['deleted']}\n";
+        echo "[User {$userId}] Pull: created={$pull['created']}, updated={$pull['updated']}, deleted={$pull['deleted']}\n";
     }
 }
