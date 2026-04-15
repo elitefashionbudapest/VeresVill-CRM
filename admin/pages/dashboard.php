@@ -106,6 +106,10 @@
 
 <script>
 async function init_dashboard() {
+    // Google Naptár szinkron háttérben (nem várjuk meg — ne lassítsa a dashboardot).
+    // Ha nincs csatlakoztatott Google fiók vagy hálózati hiba, csendben elbukik.
+    VV.post('google/sync').catch(function() {});
+
     // Statisztikák betöltése
     const stats = await VV.get('dashboard/stats');
     if (stats && stats.success) {
