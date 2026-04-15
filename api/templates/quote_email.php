@@ -120,7 +120,6 @@ SLOT;
                         <p style="color: rgba(255,255,255,0.7); margin: 0 0 4px; font-size: 14px;"><span style="text-decoration: line-through;">{$formattedOriginal} Ft</span></p>
                         <p style="color: #FFFFFF; margin: 0; font-size: 36px; font-weight: 800;">{$formattedAmount} Ft</p>
                         <p style="color: #FFD54F; margin: 8px 0 0; font-size: 15px; font-weight: 700;">-10% kedvezmény (megtakarítás: {$savings} Ft)</p>
-                        <p style="color: rgba(255,255,255,0.7); margin: 6px 0 0; font-size: 12px;">Bruttó ár, tartalmazza az ÁFÁ-t</p>
                     </td>
                 </tr>
             </table>
@@ -211,8 +210,7 @@ function getQuoteEmailText(array $order, int $amount, array $slots, string $toke
     $text .= "Típus: {$propertyLabel}\n";
     $text .= "Méret: {$size} m²\n\n";
     $text .= "EREDETI ÁR: {$formattedOriginal} Ft\n";
-    $text .= "KEDVEZMÉNYES ÁR: {$formattedAmount} Ft (-10%)\n";
-    $text .= "(Bruttó ár, tartalmazza az ÁFÁ-t)\n\n";
+    $text .= "KEDVEZMÉNYES ÁR: {$formattedAmount} Ft (-10%)\n\n";
     $text .= "VÁLASSZON IDŐPONTOT:\n";
 
     foreach ($slots as $slot) {
