@@ -13,8 +13,8 @@ function getQuoteEmailHtml(array $order, int $amount, array $slots, string $toke
     $propertyLabel = htmlspecialchars($order['property_type_label'] ?? $order['property_type'] ?? '');
     $size = htmlspecialchars($order['size'] ?? '');
 
-    // Kedvezményes ár: a beírt összeg = -10%-os ár
-    $originalAmount = (int) ceil($amount / 0.9 / 1000) * 1000;
+    // Az admin a vegleges arat irja be; az "eredeti" = beirt * 1.1 (athuzva)
+    $originalAmount = (int) round($amount * 1.1);
     $formattedAmount = number_format($amount, 0, ',', '.');
     $formattedOriginal = number_format($originalAmount, 0, ',', '.');
     $savings = number_format($originalAmount - $amount, 0, ',', '.');
