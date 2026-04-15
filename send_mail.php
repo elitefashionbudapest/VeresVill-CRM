@@ -48,7 +48,7 @@ define('ADMIN_EMAIL', env('ADMIN_EMAIL', 'veresvill.ads@gmail.com'));
 define('ADMIN_NAME', env('ADMIN_NAME', 'Veresvill'));
 // FROM cím a szerver domainjén, hogy SPF/DKIM rendben legyen (Gmail elfogadja).
 // A reply-to marad az ajanlatkeres@veresvill.hu, így a válaszok oda futnak be.
-define('FROM_EMAIL', 'noreply@visualbyadam.hu');
+define('FROM_EMAIL', 'noreply@veresvill.hu');
 define('FROM_NAME', env('FROM_NAME', 'Veresvill - Villamos Felülvizsgálat'));
 define('REPLY_TO_EMAIL', env('FROM_EMAIL', 'ajanlatkeres@veresvill.hu'));
 

@@ -200,7 +200,7 @@ HTML;
 
         // FROM a szerver domainjén (SPF/DKIM rendben — Gmail elfogadja).
         // A reply-to marad az .env-ben beállított ajanlatkeres@veresvill.hu.
-        $fromEmail = 'noreply@visualbyadam.hu';
+        $fromEmail = 'noreply@veresvill.hu';
         $fromName  = env('FROM_NAME', 'Veresvill - Villamos Felülvizsgálat');
         $replyToDefault = env('FROM_EMAIL', 'ajanlatkeres@veresvill.hu');
         $useSmtp   = env('MAIL_METHOD', 'phpmail') === 'smtp';
