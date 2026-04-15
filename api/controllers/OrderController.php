@@ -310,17 +310,30 @@ class OrderController {
         $pdo = getDbConnection();
         $id  = (int) $id;
 
-        $stmt = $pdo->prepare("SELECT id FROM vv_orders WHERE id = ?");
+        // A Sheet frissiteshez kell a telefonszam meg torles elott
+        $stmt = $pdo->prepare("SELECT customer_phone FROM vv_orders WHERE id = ?");
         $stmt->execute([$id]);
-        if (!$stmt->fetch()) {
+        $order = $stmt->fetch();
+        if (!$order) {
             Response::error('Megrendelés nem található.', 404);
         }
+        $phone = $order['customer_phone'] ?? '';
 
         // Kapcsolódó adatok törlése (CASCADE-dal is menne, de legyen explicit)
         $pdo->prepare("DELETE FROM vv_time_slots WHERE order_id = ?")->execute([$id]);
         $pdo->prepare("DELETE FROM vv_calendar_events WHERE order_id = ?")->execute([$id]);
         $pdo->prepare("DELETE FROM vv_order_status_log WHERE order_id = ?")->execute([$id]);
         $pdo->prepare("DELETE FROM vv_orders WHERE id = ?")->execute([$id]);
+
+        // Google Sheet: jelolje meg a sort torlesnek (telefonszam alapjan)
+        if (!empty($phone)) {
+            try {
+                require_once __DIR__ . '/../services/GoogleCalendarService.php';
+                GoogleCalendarService::markRowDeletedByPhone($phone);
+            } catch (\Exception $e) {
+                error_log('Sheet mark-deleted exception: ' . $e->getMessage());
+            }
+        }
 
         Response::success(null, 'Megrendelés törölve.');
     }

@@ -457,6 +457,104 @@ class GoogleCalendarService {
         return false;
     }
 
+    /**
+     * Megjeloli a Sheet-ben a torolt munkat: "Ki megy?" -> "Torles", "Valtozas?" -> TRUE.
+     * A sort a telefonszam alapjan keresi meg a Telefon oszlopban.
+     * Csak azt az egyetlen sort modositja, tobbit nem banta.
+     */
+    public static function markRowDeletedByPhone(string $phone): bool {
+        $sheetId = env('GOOGLE_SHEET_ID');
+        $sheetTab = env('GOOGLE_SHEET_TAB', 'Sheet1');
+        if (!$sheetId || empty($phone)) return false;
+
+        $pdo = getDbConnection();
+        $stmt = $pdo->query("SELECT user_id FROM vv_google_tokens WHERE sync_enabled = 1 ORDER BY id ASC LIMIT 1");
+        $row = $stmt->fetch();
+        if (!$row) return false;
+        $userId = (int) $row['user_id'];
+
+        $accessToken = self::getValidToken($userId);
+        if (!$accessToken) return false;
+
+        // 1) Fejlec (3. sor)
+        $headerResp = self::httpRequest('GET',
+            self::SHEETS_API . '/spreadsheets/' . urlencode($sheetId)
+            . '/values/' . rawurlencode($sheetTab . '!3:3'),
+            $accessToken);
+        $headers = $headerResp['values'][0] ?? [];
+        if (empty($headers)) return false;
+
+        // 2) Fejlec nev -> oszlop index (1-based A=1, B=2, ...)
+        $indexOf = function(array $headers, string $needle): ?int {
+            $needle = mb_strtolower(trim($needle));
+            foreach ($headers as $i => $h) {
+                if (mb_strtolower(trim((string) $h)) === $needle) {
+                    return $i + 1;
+                }
+            }
+            return null;
+        };
+
+        $phoneCol = $indexOf($headers, 'telefon');
+        $whoCol   = $indexOf($headers, 'ki megy?');
+        $changeCol= $indexOf($headers, 'változás?');
+
+        if (!$phoneCol || !$whoCol) {
+            error_log('Sheet mark-deleted: hianyzo oszlop (telefon vagy ki megy?)');
+            return false;
+        }
+
+        // 3) Telefon oszlop lekerese 4. sortol
+        $phoneColLetter = self::columnLetter($phoneCol);
+        $phoneResp = self::httpRequest('GET',
+            self::SHEETS_API . '/spreadsheets/' . urlencode($sheetId)
+            . '/values/' . rawurlencode($sheetTab . '!' . $phoneColLetter . '4:' . $phoneColLetter),
+            $accessToken);
+        $phoneValues = $phoneResp['values'] ?? [];
+
+        // 4) Normalizalt telefon egyezes (szokozoket, kotojeleket, +-t eldobjuk)
+        $normalize = function(string $s): string {
+            return preg_replace('/\D+/', '', $s);
+        };
+        $target = $normalize($phone);
+
+        $foundRow = null;
+        foreach ($phoneValues as $i => $rowArr) {
+            $cell = $rowArr[0] ?? '';
+            if ($normalize((string) $cell) === $target) {
+                $foundRow = 4 + $i; // data 4. sortol indul
+            }
+        }
+
+        if ($foundRow === null) {
+            error_log('Sheet mark-deleted: nincs talalat telefon=' . $phone);
+            return false;
+        }
+
+        // 5) Batch update — csak a 2 cellat bantja
+        $data = [
+            [
+                'range'  => $sheetTab . '!' . self::columnLetter($whoCol) . $foundRow,
+                'values' => [['Törlés']],
+            ],
+        ];
+        if ($changeCol) {
+            $data[] = [
+                'range'  => $sheetTab . '!' . self::columnLetter($changeCol) . $foundRow,
+                'values' => [['TRUE']],
+            ];
+        }
+
+        $batchUrl = self::SHEETS_API . '/spreadsheets/' . urlencode($sheetId) . '/values:batchUpdate';
+        $body = [
+            'valueInputOption' => 'USER_ENTERED',
+            'data' => $data,
+        ];
+        $resp = self::httpRequest('POST', $batchUrl, $accessToken, $body);
+
+        return isset($resp['responses']);
+    }
+
     // ============================================
     // HELPERS
     // ============================================
