@@ -492,12 +492,13 @@ async function renderSlotPicker() {
             const slotTime = new Date(dateStr + 'T' + startStr);
             const isPast = slotTime < now;
 
-            // Foglalt?
-            const isBusy = slotPickerBusy.some(b => {
-                const bStart = b.start;
-                const bEnd = b.end;
-                return bStart < dateStr+'T'+endStr+':00' && bEnd > dateStr+'T'+startStr+':00';
-            });
+            // Foglalasok szamlalasa — max 2 lehet egy slotra
+            const busyCount = slotPickerBusy.reduce((n, b) => {
+                return (b.start < dateStr+'T'+endStr+':00' && b.end > dateStr+'T'+startStr+':00')
+                    ? n + 1 : n;
+            }, 0);
+            const isFull = busyCount >= 2;
+            const isPartial = busyCount === 1;
 
             // Kiválasztva?
             const isSelected = slotPickerSelected.some(s => s.date === dateStr && s.start === startStr);
@@ -510,12 +511,17 @@ async function renderSlotPicker() {
             if (isPast) {
                 cellStyle += 'background:#f5f5f5;cursor:default;';
                 cellContent = '';
-            } else if (isBusy) {
+            } else if (isFull) {
                 cellStyle += 'background:#ffcdd2;cursor:default;';
                 cellContent = '<i class="fas fa-ban" style="color:#e57373;font-size:11px;"></i>';
             } else if (isSelected) {
                 cellStyle += 'background:#4A90E2;color:#fff;border-radius:4px;';
                 cellContent = '<i class="fas fa-check" style="font-size:14px;"></i>';
+                onclick = `onclick="toggleSlot('${dateStr}','${startStr}','${endStr}')"`;
+            } else if (isPartial) {
+                // Egy foglalas mar van — meg egyszer kiadhato
+                cellStyle += 'background:#fff3e0;';
+                cellContent = '<span style="color:#f57c00;font-size:11px;font-weight:700;">1/2</span>';
                 onclick = `onclick="toggleSlot('${dateStr}','${startStr}','${endStr}')"`;
             } else {
                 cellStyle += 'background:#e8f5e9;';

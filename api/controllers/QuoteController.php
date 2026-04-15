@@ -291,25 +291,25 @@ class QuoteController {
             Response::error('A kiválasztott időpont nem tartozik ehhez a megrendeléshez.', 422);
         }
 
-        // Ütközés ellenőrzés: van-e már megerősített esemény erre az időpontra
+        // Utkozes ellenorzes — max 2 foglalas engedelyezett ugyanarra az idopontra.
+        // Osszeszamoljuk a megerositett esemenyek + mas megrendelesek elfogadott slotjait.
         $stmt = $pdo->prepare("
             SELECT COUNT(*) as cnt FROM vv_calendar_events
             WHERE user_id = ? AND event_date = ? AND start_time < ? AND end_time > ?
         ");
         $stmt->execute([$slot['worker_id'], $slot['slot_date'], $slot['slot_end'], $slot['slot_start']]);
-        if ((int) $stmt->fetch()['cnt'] > 0) {
-            Response::error('Sajnáljuk, ezt az időpontot már egy másik megrendelő lefoglalta. Kérjük, válasszon másik időpontot!', 409);
-        }
+        $calendarCount = (int) $stmt->fetch()['cnt'];
 
-        // Ellenőrzés: másik megrendelés time_slot-ja is foglalhatja
         $stmt = $pdo->prepare("
             SELECT COUNT(*) as cnt FROM vv_time_slots
             WHERE worker_id = ? AND slot_date = ? AND slot_start < ? AND slot_end > ?
             AND is_selected = 1 AND order_id != ?
         ");
         $stmt->execute([$slot['worker_id'], $slot['slot_date'], $slot['slot_end'], $slot['slot_start'], $order['id']]);
-        if ((int) $stmt->fetch()['cnt'] > 0) {
-            Response::error('Sajnáljuk, ezt az időpontot már egy másik megrendelő lefoglalta. Kérjük, válasszon másik időpontot!', 409);
+        $otherSelectedCount = (int) $stmt->fetch()['cnt'];
+
+        if ($calendarCount + $otherSelectedCount >= 2) {
+            Response::error('Sajnáljuk, ezt az időpontot már ketten lefoglalták. Kérjük, válasszon másik időpontot!', 409);
         }
 
         $pdo->beginTransaction();
