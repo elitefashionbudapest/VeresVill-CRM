@@ -121,8 +121,8 @@
                     <div class="step">
                         <div class="step-num">1</div>
                         <div class="step-text">
-                            <strong>Visszaigazolás</strong><br>
-                            <small>Kollégánk hamarosan felveszi Önnel a kapcsolatot az egyeztetett időpont megerősítéséhez.</small>
+                            <strong>Visszaigazoló email</strong><br>
+                            <small>A választott időpontot emailben is megküldjük Önnek pár percen belül. A levélben egy „Hozzáadás Google Naptárhoz" gomb is lesz.</small>
                         </div>
                     </div>
                     <div class="step">
