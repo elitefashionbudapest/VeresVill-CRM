@@ -163,11 +163,17 @@
     const params = new URLSearchParams(window.location.search);
     const token = params.get('token');
     const preselectedSlot = params.get('slot');
+    const rejectMode = params.get('reject') === '1';
     let selectedSlotId = preselectedSlot ? parseInt(preselectedSlot) : null;
 
     async function loadQuote() {
         if (!token) {
             showError('Érvénytelen link.');
+            return;
+        }
+
+        if (rejectMode) {
+            renderRejectForm();
             return;
         }
 
@@ -286,6 +292,56 @@
         } catch (e) {
             btn.disabled = false;
             btn.textContent = '✓ Elfogadom az árajánlatot és az időpontot';
+            alert('Hálózati hiba. Kérjük, próbálja újra.');
+        }
+    }
+
+    function renderRejectForm() {
+        document.getElementById('content').innerHTML = `
+            <div class="body">
+                <div class="greeting">Egyik időpont sem felel meg?</div>
+                <p class="subtitle">Semmi gond! Jelezze felénk és hamarosan új időpontokkal keressük.</p>
+                <div style="margin-top:18px;">
+                    <label style="display:block;color:#5A6C7D;font-size:14px;margin-bottom:6px;">Megjegyzés (opcionális — mikor lenne alkalmas?)</label>
+                    <textarea id="reject-note" rows="4" style="width:100%;padding:12px;border:1px solid #E8F4FD;border-radius:10px;font-family:inherit;font-size:14px;resize:vertical;" placeholder="pl. Jövő héten délután kerne..."></textarea>
+                </div>
+                <button class="accept-btn" id="reject-btn" onclick="submitReject()" style="margin-top:18px;">
+                    Küldés
+                </button>
+            </div>
+        `;
+    }
+
+    async function submitReject() {
+        const btn = document.getElementById('reject-btn');
+        const note = (document.getElementById('reject-note').value || '').trim();
+        btn.disabled = true;
+        btn.textContent = 'Küldés...';
+
+        try {
+            const res = await fetch(`../api/quote/reject-slots/${token}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ note })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                document.getElementById('content').innerHTML = `
+                    <div class="body" style="text-align:center;padding:50px 30px;">
+                        <div style="font-size:48px;margin-bottom:15px;">✓</div>
+                        <div class="greeting">Köszönjük!</div>
+                        <p class="subtitle">Hamarosan új időpontokkal keressük.</p>
+                    </div>
+                `;
+            } else {
+                btn.disabled = false;
+                btn.textContent = 'Küldés';
+                alert(data.message || 'Hiba történt. Kérjük, próbálja újra.');
+            }
+        } catch (e) {
+            btn.disabled = false;
+            btn.textContent = 'Küldés';
             alert('Hálózati hiba. Kérjük, próbálja újra.');
         }
     }

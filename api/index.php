@@ -52,6 +52,9 @@ $routes = [
     ['POST',   'orders/(\d+)/quote',            'QuoteController',        'sendQuote',       'admin'],
     ['GET',    'quote/view/([a-f0-9]+)',         'QuoteController',        'viewQuote',       'none'],
     ['POST',   'quote/accept/([a-f0-9]+)',       'QuoteController',        'acceptQuote',     'none'],
+    ['POST',   'quote/reject-slots/([a-f0-9]+)', 'QuoteController',        'rejectSlots',     'none'],
+    ['DELETE', 'orders/(\d+)/slots/(\d+)',       'QuoteController',        'deleteSlot',      'admin'],
+    ['POST',   'orders/(\d+)/confirm-slot',      'QuoteController',        'confirmSlot',     'admin'],
 
     // Calendar
     ['GET',    'calendar/available-slots',       'CalendarController',     'availableSlots',  'auth'],

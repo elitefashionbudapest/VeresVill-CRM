@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS vv_orders (
     quote_sent_at DATETIME NULL,
     quote_accepted_at DATETIME NULL,
     selected_slot_id INT UNSIGNED NULL,
+    slots_rejected_at DATETIME NULL,
     completed_at DATETIME NULL,
     admin_notes TEXT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

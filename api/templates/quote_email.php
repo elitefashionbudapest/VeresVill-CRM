@@ -128,12 +128,22 @@ SLOT;
 
     <!-- Időpont választás -->
     <tr>
-        <td style="padding: 0 40px 30px;">
+        <td style="padding: 0 40px 15px;">
             <h3 style="color: #4A90E2; font-size: 18px; margin: 0 0 5px;">Válasszon időpontot:</h3>
             <p style="color: #5A6C7D; font-size: 14px; margin: 0 0 15px;">Kattintson a kiválasztott időpontra a megerősítéshez.</p>
             <table width="100%" cellpadding="0" cellspacing="0">
                 {$slotButtons}
             </table>
+        </td>
+    </tr>
+
+    <!-- Egyik sem felel meg -->
+    <tr>
+        <td style="padding: 0 40px 30px; text-align: center;">
+            <a href="{$appUrl}/public/quote.php?token={$token}&reject=1" style="display: inline-block; color: #E65100; padding: 10px 20px; border: 2px solid #FFB74D; border-radius: 50px; text-decoration: none; font-weight: 600; font-size: 14px; background: #FFF8E1;">
+                Egyik időpont sem felel meg &rarr;
+            </a>
+            <p style="color: #9e9e9e; font-size: 12px; margin: 8px 0 0;">Jelezze felénk és új időpontokkal keressük.</p>
         </td>
     </tr>
 
@@ -226,6 +236,8 @@ function getQuoteEmailText(array $order, int $amount, array $slots, string $toke
         $text .= "\n  {$dateStr} {$timeStr}\n  Link: {$slotUrl}\n";
     }
 
+    $text .= "\nHa egyik időpont sem felel meg, jelezze itt:\n";
+    $text .= "{$appUrl}/public/quote.php?token={$token}&reject=1\n";
     $text .= "\nAz árajánlat 7 napig érvényes.\n\n";
     $text .= "Kérdése van? Írjon nekünk: veresvill.ads@gmail.com\n\n";
     $text .= "Üdvözlettel,\nVeresVill csapata";

@@ -91,6 +91,7 @@ class OrderController {
                 o.status,
                 o.assigned_to,
                 o.quote_amount,
+                o.slots_rejected_at,
                 o.created_at,
                 u.name as assigned_to_name
             FROM vv_orders o

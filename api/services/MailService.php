@@ -117,6 +117,62 @@ class MailService
     }
 
     /**
+     * Admin értesítés: megrendelő jelezte, hogy egyik kiajánlott időpont sem felel meg neki.
+     */
+    public static function sendSlotRejectionAdminNotification(array $order, string $customerNote = ''): bool
+    {
+        $name    = htmlspecialchars($order['customer_name'] ?? '');
+        $phone   = htmlspecialchars($order['customer_phone'] ?? '');
+        $email   = htmlspecialchars($order['customer_email'] ?? '');
+        $address = htmlspecialchars($order['customer_address'] ?? '');
+        $noteHtml = $customerNote !== '' ? '<p><strong>Megjegyzés:</strong> ' . nl2br(htmlspecialchars($customerNote)) . '</p>' : '';
+
+        $adminUrl = rtrim(env('APP_URL', 'https://veresvill.hu'), '/') . '/admin/';
+
+        $html = <<<HTML
+<!DOCTYPE html>
+<html lang="hu"><head><meta charset="UTF-8"></head>
+<body style="font-family:Segoe UI,Arial,sans-serif;background:#f0f4f8;padding:30px;">
+    <table width="600" cellpadding="0" cellspacing="0" align="center" style="background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+        <tr><td style="background:#FF9800;padding:25px 30px;border-radius:12px 12px 0 0;">
+            <h2 style="color:#fff;margin:0;font-size:22px;">⚠️ Időpontok elutasítva</h2>
+        </td></tr>
+        <tr><td style="padding:25px 30px;color:#2c3e50;">
+            <p>A megrendelő jelezte, hogy <strong>egyik kiajánlott időpont sem felel meg neki</strong>. Új időpontokat kell felajánlani.</p>
+            <table cellpadding="8" cellspacing="0" style="width:100%;background:#f8fafb;border-radius:8px;margin:15px 0;">
+                <tr><td style="color:#5a6c7d;width:100px;">Név:</td><td><strong>{$name}</strong></td></tr>
+                <tr><td style="color:#5a6c7d;">Telefon:</td><td><a href="tel:{$phone}">{$phone}</a></td></tr>
+                <tr><td style="color:#5a6c7d;">Email:</td><td><a href="mailto:{$email}">{$email}</a></td></tr>
+                <tr><td style="color:#5a6c7d;">Cím:</td><td>{$address}</td></tr>
+            </table>
+            {$noteHtml}
+            <p style="margin-top:20px;"><a href="{$adminUrl}" style="display:inline-block;background:#4A90E2;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700;">Megnyitás az adminban</a></p>
+        </td></tr>
+    </table>
+</body></html>
+HTML;
+
+        $text = "IDŐPONTOK ELUTASÍTVA\n\n"
+              . "A megrendelő jelezte, hogy egyik kiajánlott időpont sem felel meg neki.\n\n"
+              . "Név: {$order['customer_name']}\n"
+              . "Telefon: {$order['customer_phone']}\n"
+              . "Email: {$order['customer_email']}\n"
+              . "Cím: {$order['customer_address']}\n"
+              . ($customerNote !== '' ? "\nMegjegyzés: {$customerNote}\n" : '')
+              . "\nKérjük, ajánljon fel új időpontokat az adminban.\n";
+
+        $subject = "⚠️ Időpontok elutasítva - {$order['customer_name']}";
+
+        return self::sendRaw(
+            env('ADMIN_EMAIL', 'veresvill.ads@gmail.com'),
+            env('ADMIN_NAME', 'Veresvill'),
+            $subject,
+            $html,
+            $text
+        );
+    }
+
+    /**
      * Általános email küldés SMTP-vel
      *
      * @param string      $to       Címzett email

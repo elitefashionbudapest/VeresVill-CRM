@@ -135,7 +135,7 @@ async function loadOrders() {
                 <td class="d-none d-md-table-cell">
                     <small>${escHtml(truncate(o.customer_address, 40))}</small>
                 </td>
-                <td>${VV.statusBadge(o.status)}</td>
+                <td>${VV.statusBadge(o.status)}${o.slots_rejected_at && o.status === 'ajanlat_kuldve' ? ' <span class="badge badge-warning ml-1" title="Ügyfél elutasította az időpontokat"><i class="fas fa-exclamation-triangle"></i></span>' : ''}</td>
                 <td class="d-none d-md-table-cell">${VV.formatMoney(o.quote_amount)}</td>
                 <td class="d-none d-sm-table-cell">
                     <small>${VV.formatDateTime(o.created_at)}</small>
@@ -294,18 +294,56 @@ async function showOrder(id) {
                         <h3 class="text-primary">${VV.formatMoney(o.quote_amount)}</h3>
                         <small class="text-muted">Küldve: ${VV.formatDateTime(o.quote_sent_at)}</small>
                         ${o.quote_accepted_at ? `<br><small class="text-success"><i class="fas fa-check mr-1"></i>Elfogadva: ${VV.formatDateTime(o.quote_accepted_at)}</small>` : ''}
+
+                        ${o.slots_rejected_at && o.status === 'ajanlat_kuldve' ? `
+                        <div class="alert alert-warning mt-3 mb-0">
+                            <i class="fas fa-exclamation-triangle mr-1"></i>
+                            <strong>Az ügyfél jelezte, hogy egyik kiajánlott időpont sem felel meg neki.</strong><br>
+                            <small>Jelezve: ${VV.formatDateTime(o.slots_rejected_at)}. Kérjük, ajánljon fel új időpontokat vagy egyeztessen telefonon.</small>
+                        </div>` : ''}
+
                         ${o.time_slots && o.time_slots.length ? `
                         <hr>
                         <strong>Felajánlott időpontok:</strong>
                         <ul class="list-unstyled mt-2">
                             ${o.time_slots.map(s => `
-                                <li class="mb-1">
-                                    ${s.is_selected ? '<i class="fas fa-check-circle text-success mr-1"></i>' : '<i class="far fa-circle text-muted mr-1"></i>'}
-                                    ${VV.formatSlot(s.slot_date, s.slot_start, s.slot_end)}
-                                    ${s.is_selected ? ' <strong class="text-success">(Kiválasztva)</strong>' : ''}
+                                <li class="mb-2 d-flex align-items-center flex-wrap">
+                                    <span class="mr-2">
+                                        ${s.is_selected ? '<i class="fas fa-check-circle text-success mr-1"></i>' : '<i class="far fa-circle text-muted mr-1"></i>'}
+                                        ${VV.formatSlot(s.slot_date, s.slot_start, s.slot_end)}
+                                        ${s.is_selected ? ' <strong class="text-success">(Kiválasztva)</strong>' : ''}
+                                    </span>
+                                    ${isAdmin && !s.is_selected && o.status === 'ajanlat_kuldve' ? `
+                                    <span class="ml-auto">
+                                        <button class="btn btn-xs btn-success mr-1" onclick="confirmSlotById(${o.id}, ${s.id})" title="Véglegesítés (email küldés az ügyfélnek)">
+                                            <i class="fas fa-check mr-1"></i>Megbeszélve
+                                        </button>
+                                        <button class="btn btn-xs btn-outline-danger" onclick="deleteSlot(${o.id}, ${s.id})" title="Időpont törlése">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </span>` : ''}
                                 </li>
                             `).join('')}
                         </ul>` : ''}
+
+                        ${isAdmin && o.status === 'ajanlat_kuldve' ? `
+                        <hr>
+                        <strong><i class="fas fa-phone mr-1"></i>Manuális időpont (telefonos egyeztetés)</strong>
+                        <p class="text-muted mb-2"><small>Ha telefonon egyeztettek időpontot, itt véglegesítheti. Automatikusan visszaigazoló emailt küld az ügyfélnek.</small></p>
+                        <div class="form-row">
+                            <div class="col-md-5 mb-2">
+                                <input type="date" id="manual-slot-date" class="form-control form-control-sm" min="${new Date().toISOString().slice(0,10)}">
+                            </div>
+                            <div class="col-6 col-md-3 mb-2">
+                                <input type="time" id="manual-slot-start" class="form-control form-control-sm" value="09:00" step="900">
+                            </div>
+                            <div class="col-6 col-md-3 mb-2">
+                                <input type="time" id="manual-slot-end" class="form-control form-control-sm" value="10:00" step="900">
+                            </div>
+                        </div>
+                        <button class="btn btn-success btn-block btn-sm" onclick="confirmSlotManual(${o.id})">
+                            <i class="fas fa-calendar-check mr-1"></i>Időpont véglegesítése + visszaigazoló email
+                        </button>` : ''}
                     </div>
                 </div>` : ''}
 
@@ -613,6 +651,55 @@ async function sendQuote(orderId) {
         VV.toast(res?.message || 'Hiba történt.', 'error');
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-paper-plane mr-1"></i>Árajánlat küldése emailben';
+    }
+}
+
+// Kiajanlott idopont torlese
+async function deleteSlot(orderId, slotId) {
+    if (!await VV.confirm('Biztosan törli ezt a kiajánlott időpontot?')) return;
+    const res = await VV.del(`orders/${orderId}/slots/${slotId}`);
+    if (res && res.success) {
+        VV.toast('Időpont törölve.', 'success');
+        showOrder(orderId);
+    } else {
+        VV.toast(res?.message || 'Hiba történt.', 'error');
+    }
+}
+
+// Megbeszelt idopont veglegesitese (meglevo slot alapjan)
+async function confirmSlotById(orderId, slotId) {
+    if (!await VV.confirm('Véglegesíti ezt az időpontot? Az ügyfél visszaigazoló emailt fog kapni.')) return;
+    const res = await VV.post(`orders/${orderId}/confirm-slot`, { slot_id: slotId });
+    if (res && res.success) {
+        VV.toast('Időpont véglegesítve, visszaigazoló email elküldve.', 'success');
+        showOrder(orderId);
+    } else {
+        VV.toast(res?.message || 'Hiba történt.', 'error');
+    }
+}
+
+// Manualis idopont veglegesitese (datum + ido mezokbol)
+async function confirmSlotManual(orderId) {
+    const date  = document.getElementById('manual-slot-date').value;
+    const start = document.getElementById('manual-slot-start').value;
+    const end   = document.getElementById('manual-slot-end').value;
+
+    if (!date || !start || !end) {
+        VV.toast('Adjon meg dátumot, kezdési és befejezési időt.', 'error');
+        return;
+    }
+    if (end <= start) {
+        VV.toast('A befejezési időnek későbbinek kell lennie a kezdésnél.', 'error');
+        return;
+    }
+    if (!await VV.confirm(`Véglegesíti: ${date} ${start}-${end}? Az ügyfél visszaigazoló emailt fog kapni.`)) return;
+
+    const res = await VV.post(`orders/${orderId}/confirm-slot`, { date, start, end });
+    if (res && res.success) {
+        VV.toast('Időpont véglegesítve, visszaigazoló email elküldve.', 'success');
+        showOrder(orderId);
+    } else {
+        VV.toast(res?.message || 'Hiba történt.', 'error');
     }
 }
 
