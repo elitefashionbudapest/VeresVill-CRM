@@ -241,7 +241,6 @@
                     <div style="color:rgba(255,255,255,0.6);font-size:14px;text-decoration:line-through;">${originalFormatted} Ft</div>
                     <div class="price-amount">${amount} Ft</div>
                     <div style="color:#FFD54F;font-size:15px;font-weight:700;margin-top:4px;">-10% kedvezmény (megtakarítás: ${savingsFormatted} Ft)</div>
-                    <div class="price-note">Bruttó ár, tartalmazza az ÁFÁ-t</div>
                 </div>
 
                 <div class="slots-title">Válasszon időpontot:</div>
