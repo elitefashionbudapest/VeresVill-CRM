@@ -448,10 +448,18 @@ async function renderSlotPicker() {
     const months = ['jan','feb','már','ápr','máj','jún','júl','aug','sze','okt','nov','dec'];
     label.textContent = `${months[weekStart.getMonth()]} ${weekStart.getDate()}. - ${months[weekEnd.getMonth()]} ${weekEnd.getDate()}.`;
 
+    // Helyi datum YYYY-MM-DD (UTC konverzio kerulese)
+    const ymd = (d) => {
+        const y = d.getFullYear();
+        const m = String(d.getMonth()+1).padStart(2,'0');
+        const day = String(d.getDate()).padStart(2,'0');
+        return `${y}-${m}-${day}`;
+    };
+
     // Foglalt időpontok betöltése
     const user = VV.getUser();
-    const startStr = days[0].toISOString().split('T')[0];
-    const endStr = days[4].toISOString().split('T')[0];
+    const startStr = ymd(days[0]);
+    const endStr = ymd(days[4]);
     const busyData = await VV.get(`calendar/events?start=${startStr}&end=${endStr}`);
     slotPickerBusy = (busyData && busyData.success) ? busyData.data : [];
 
@@ -475,7 +483,7 @@ async function renderSlotPicker() {
         html += `<td style="text-align:center;font-weight:600;color:#6c757d;padding:4px;vertical-align:middle;font-size:12px;">${hour}:00</td>`;
 
         days.forEach(day => {
-            const dateStr = day.toISOString().split('T')[0];
+            const dateStr = ymd(day);
             const startStr = `${String(hour).padStart(2,'0')}:00`;
             const endStr = `${String(hour+1).padStart(2,'0')}:00`;
             const slotKey = `${dateStr}_${startStr}`;
