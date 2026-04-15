@@ -449,6 +449,60 @@ class QuoteController {
     }
 
     /**
+     * POST orders/{id}/resend-quote
+     * Visszaallitja a megrendelest 'uj' statuszba hogy az admin uj idopontokat kuldhessen.
+     * A regi kiajanlott slotok torlodnek. A quote_amount megmarad (elore kitoltheto).
+     */
+    public function resendQuote(string $orderId, array $input = []): void {
+        $pdo  = getDbConnection();
+        $user = Auth::user();
+        $orderId = (int) $orderId;
+
+        $stmt = $pdo->prepare("SELECT * FROM vv_orders WHERE id = ?");
+        $stmt->execute([$orderId]);
+        $order = $stmt->fetch();
+
+        if (!$order) {
+            Response::error('Megrendelés nem található.', 404);
+        }
+
+        if ($order['status'] !== ORDER_STATUS_QUOTE_SENT) {
+            Response::error('Csak "Árajánlat küldve" állapotban lehet új időpontokat kiküldeni.', 422);
+        }
+
+        $pdo->beginTransaction();
+        try {
+            $pdo->prepare("DELETE FROM vv_time_slots WHERE order_id = ?")->execute([$orderId]);
+
+            $stmt = $pdo->prepare("
+                UPDATE vv_orders
+                SET status = ?, slots_rejected_at = NULL, quote_token = NULL, quote_token_expires = NULL, updated_at = NOW()
+                WHERE id = ?
+            ");
+            $stmt->execute([ORDER_STATUS_NEW, $orderId]);
+
+            $stmt = $pdo->prepare("
+                INSERT INTO vv_order_status_log (order_id, old_status, new_status, changed_by, note)
+                VALUES (?, ?, ?, ?, ?)
+            ");
+            $stmt->execute([
+                $orderId,
+                $order['status'],
+                ORDER_STATUS_NEW,
+                $user['id'],
+                'Admin: új időpontok kiküldése — régi kiajánlott időpontok törölve.',
+            ]);
+
+            $pdo->commit();
+        } catch (\Exception $e) {
+            $pdo->rollBack();
+            Response::error('Hiba történt az új időpontok előkészítésekor.', 500);
+        }
+
+        Response::success(['order_id' => $orderId], 'Új időpontokat adhat meg a naptárban.');
+    }
+
+    /**
      * DELETE orders/{id}/slots/{slotId}
      * Kiajánlott időpont törlése (admin). Kiválasztott slot nem törölhető.
      */

@@ -259,7 +259,7 @@ async function showOrder(id) {
                     <div class="card-body">
                         <div class="form-group">
                             <label>Árajánlat összege (Ft)</label>
-                            <input type="number" id="quote-amount" class="form-control form-control-lg" placeholder="pl. 35000" min="1000" step="1000" style="font-size:1.4rem;font-weight:700;">
+                            <input type="number" id="quote-amount" class="form-control form-control-lg" placeholder="pl. 35000" min="1000" step="1000" value="${o.quote_amount || ''}" style="font-size:1.4rem;font-weight:700;">
                             <small class="text-muted">Bruttó ár ÁFÁ-val</small>
                         </div>
 
@@ -328,6 +328,9 @@ async function showOrder(id) {
 
                         ${isAdmin && o.status === 'ajanlat_kuldve' ? `
                         <hr>
+                        <button class="btn btn-outline-primary btn-block btn-sm mb-3" onclick="resendQuote(${o.id})">
+                            <i class="fas fa-redo mr-1"></i>Új időpontok kiküldése (régiek törlése)
+                        </button>
                         <strong><i class="fas fa-phone mr-1"></i>Manuális időpont (telefonos egyeztetés)</strong>
                         <p class="text-muted mb-2"><small>Ha telefonon egyeztettek időpontot, itt véglegesítheti. Automatikusan visszaigazoló emailt küld az ügyfélnek.</small></p>
                         <div class="form-row">
@@ -697,6 +700,18 @@ async function confirmSlotManual(orderId) {
     const res = await VV.post(`orders/${orderId}/confirm-slot`, { date, start, end });
     if (res && res.success) {
         VV.toast('Időpont véglegesítve, visszaigazoló email elküldve.', 'success');
+        showOrder(orderId);
+    } else {
+        VV.toast(res?.message || 'Hiba történt.', 'error');
+    }
+}
+
+// Uj idopontok kikuldese — visszallit 'uj' statuszba, regi slotok torlodnek
+async function resendQuote(orderId) {
+    if (!await VV.confirm('Biztosan új időpontokat küld ki? A korábban kiajánlott időpontok törlődnek, és új ajánlatot állíthat össze.')) return;
+    const res = await VV.post(`orders/${orderId}/resend-quote`, {});
+    if (res && res.success) {
+        VV.toast('Régi időpontok törölve. Válasszon újakat a naptárban.', 'success');
         showOrder(orderId);
     } else {
         VV.toast(res?.message || 'Hiba történt.', 'error');

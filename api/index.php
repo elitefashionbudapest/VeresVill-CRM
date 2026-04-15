@@ -55,6 +55,7 @@ $routes = [
     ['POST',   'quote/reject-slots/([a-f0-9]+)', 'QuoteController',        'rejectSlots',     'none'],
     ['DELETE', 'orders/(\d+)/slots/(\d+)',       'QuoteController',        'deleteSlot',      'admin'],
     ['POST',   'orders/(\d+)/confirm-slot',      'QuoteController',        'confirmSlot',     'admin'],
+    ['POST',   'orders/(\d+)/resend-quote',      'QuoteController',        'resendQuote',     'admin'],
 
     // Calendar
     ['GET',    'calendar/available-slots',       'CalendarController',     'availableSlots',  'auth'],
