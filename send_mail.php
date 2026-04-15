@@ -391,7 +391,7 @@ function getAdminEmailHtml($name, $email, $phone, $address, $propertyLabel, $siz
             <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                     <td style="background: #E8F4FD; padding: 20px; border-radius: 10px; text-align: center;">
-                        <p style="color: #2C3E50; margin: 0 0 10px; font-weight: 600;">⚡ Visszahívási garancia: 60 percen belül!</p>
+                        <p style="color: #2C3E50; margin: 0 0 10px; font-weight: 600;">⚡ Árajánlat garancia: 60 percen belül!</p>
                         <a href="tel:{$phone}" style="display: inline-block; background: #4A90E2; color: #FFFFFF; padding: 12px 30px; border-radius: 50px; text-decoration: none; font-weight: 700; font-size: 16px;">📞 Visszahívás most: {$phone}</a>
                     </td>
                 </tr>
