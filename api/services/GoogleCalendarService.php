@@ -512,11 +512,9 @@ class GoogleCalendarService {
             $accessToken);
         $phoneValues = $phoneResp['values'] ?? [];
 
-        // 4) Normalizalt telefon egyezes (szokozoket, kotojeleket, +-t eldobjuk)
-        $normalize = function(string $s): string {
-            return preg_replace('/\D+/', '', $s);
-        };
-        $target = $normalize($phone);
+        // 4) Normalizalt telefon egyezes — "06..." es "+36..." formatumot is egyesitjuk
+        $target = self::normalizePhone($phone);
+        $normalize = fn(string $s) => self::normalizePhone($s);
 
         $foundRow = null;
         foreach ($phoneValues as $i => $rowArr) {
@@ -579,6 +577,29 @@ class GoogleCalendarService {
                 'timeZone' => 'Europe/Budapest',
             ],
         ];
+    }
+
+    /**
+     * Magyar telefonszam normalizalasa osszehasonlitashoz.
+     * Eldobjuk a nem-digit karaktereket, es a 06 / +36 / 36 kezdeteket egyseges "36" prefixre hozzuk.
+     * Pl. "+36 70 334 5972" -> "36703345972"
+     *      "06703345972"     -> "36703345972"
+     *      "06 70/334-5972"  -> "36703345972"
+     */
+    private static function normalizePhone(string $s): string {
+        $digits = preg_replace('/\D+/', '', $s);
+        if ($digits === '') return '';
+        if (str_starts_with($digits, '06')) {
+            return '36' . substr($digits, 2);
+        }
+        if (str_starts_with($digits, '36')) {
+            return $digits;
+        }
+        // Ha csak 9 jegyu (pl. 703345972), eleje ele 36
+        if (strlen($digits) === 9) {
+            return '36' . $digits;
+        }
+        return $digits;
     }
 
     /**
