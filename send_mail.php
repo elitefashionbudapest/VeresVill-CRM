@@ -110,6 +110,7 @@ $propertyType = trim($_POST['property-type'] ?? '');
 $size         = trim($_POST['size'] ?? '');
 $urgency      = trim($_POST['urgency'] ?? 'normal');
 $message      = trim($_POST['message'] ?? '');
+$energyCertificate = ($_POST['energy-certificate'] ?? 'nem') === 'igen' ? 1 : 0;
 
 // Validáció
 $errors = [];
@@ -181,9 +182,11 @@ if (env('APP_DEBUG') === 'true') {
 
         // Tartalom
         $adminMail->isHTML(true);
-        $adminMail->Subject = "Új megrendelés - {$name} | {$propertyLabel} | {$urgencyLabel}";
-        $adminMail->Body    = getAdminEmailHtml($name, $email, $phone, $address, $propertyLabel, $size, $urgencyLabel, $message, $dateTime);
-        $adminMail->AltBody = getAdminEmailText($name, $email, $phone, $address, $propertyLabel, $size, $urgencyLabel, $message, $dateTime);
+        $adminSubject = "Új megrendelés - {$name} | {$propertyLabel} | {$urgencyLabel}";
+        if ($energyCertificate) $adminSubject .= ' + Energetikai';
+        $adminMail->Subject = $adminSubject;
+        $adminMail->Body    = getAdminEmailHtml($name, $email, $phone, $address, $propertyLabel, $size, $urgencyLabel, $message, $dateTime, $energyCertificate);
+        $adminMail->AltBody = getAdminEmailText($name, $email, $phone, $address, $propertyLabel, $size, $urgencyLabel, $message, $dateTime, $energyCertificate);
 
         $adminMail->send();
     } catch (Exception $e) {
@@ -203,8 +206,8 @@ try {
 
     // Megrendelés mentése
     $stmt = $pdo->prepare("
-        INSERT INTO vv_orders (customer_name, customer_email, customer_phone, customer_address, property_type, property_type_label, size, urgency, urgency_label, message, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO vv_orders (customer_name, customer_email, customer_phone, customer_address, property_type, property_type_label, size, urgency, urgency_label, message, energy_certificate, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
     $stmt->execute([
         $name,
@@ -217,6 +220,7 @@ try {
         $urgency,
         $urgencyLabel,
         $message ?: null,
+        $energyCertificate,
         ORDER_STATUS_NEW,
     ]);
     $orderId = (int) $pdo->lastInsertId();
@@ -294,7 +298,7 @@ exit;
 /**
  * Admin email - HTML
  */
-function getAdminEmailHtml($name, $email, $phone, $address, $propertyLabel, $size, $urgencyLabel, $message, $dateTime) {
+function getAdminEmailHtml($name, $email, $phone, $address, $propertyLabel, $size, $urgencyLabel, $message, $dateTime, $energyCertificate = 0) {
     $urgencyColor = '#4CAF50';
     if (strpos($urgencyLabel, 'aznap') !== false) $urgencyColor = '#FF9800';
     if (strpos($urgencyLabel, 'Sürgős') !== false) $urgencyColor = '#FF6B6B';
@@ -306,6 +310,15 @@ function getAdminEmailHtml($name, $email, $phone, $address, $propertyLabel, $siz
         <tr>
             <td style=\"padding: 14px 20px; font-weight: 600; color: #5A6C7D; border-bottom: 1px solid #E8F4FD; width: 160px; vertical-align: top;\">Megjegyzés</td>
             <td style=\"padding: 14px 20px; color: #2C3E50; border-bottom: 1px solid #E8F4FD;\">{$messageHtml}</td>
+        </tr>";
+    }
+
+    $energyRow = '';
+    if ($energyCertificate) {
+        $energyRow = "
+        <tr style=\"background: #FFF8E1;\">
+            <td style=\"padding: 14px 20px; font-weight: 600; color: #5A6C7D; border-bottom: 1px solid #E8F4FD; width: 160px;\">⚡ Energetikai</td>
+            <td style=\"padding: 14px 20px; color: #E65100; border-bottom: 1px solid #E8F4FD; font-weight: 700;\">Igen, kér árajánlatot energetikai tanúsítványra is</td>
         </tr>";
     }
 
@@ -381,6 +394,7 @@ function getAdminEmailHtml($name, $email, $phone, $address, $propertyLabel, $siz
                     <td style="padding: 14px 20px; color: #2C3E50; border-bottom: 1px solid #E8F4FD;">{$size} m²</td>
                 </tr>
                 {$messageRow}
+                {$energyRow}
             </table>
         </td>
     </tr>
@@ -422,7 +436,7 @@ HTML;
 /**
  * Admin email - Szöveges változat
  */
-function getAdminEmailText($name, $email, $phone, $address, $propertyLabel, $size, $urgencyLabel, $message, $dateTime) {
+function getAdminEmailText($name, $email, $phone, $address, $propertyLabel, $size, $urgencyLabel, $message, $dateTime, $energyCertificate = 0) {
     $text = "ÚJ MEGRENDELÉS - VERESVILL\n";
     $text .= "========================\n\n";
     $text .= "Dátum: {$dateTime}\n";
@@ -436,6 +450,9 @@ function getAdminEmailText($name, $email, $phone, $address, $propertyLabel, $siz
     $text .= "Méret: {$size} m²\n";
     if (!empty($message)) {
         $text .= "Megjegyzés: {$message}\n";
+    }
+    if ($energyCertificate) {
+        $text .= "ENERGETIKAI TANÚSÍTVÁNY: Igen, kér árajánlatot\n";
     }
     $text .= "\n60 PERCEN BELÜL HÍVJA VISSZA!";
     return $text;

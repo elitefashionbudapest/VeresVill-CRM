@@ -91,6 +91,8 @@ class OrderController {
                 o.status,
                 o.assigned_to,
                 o.quote_amount,
+                o.energy_certificate,
+                o.energy_certificate_amount,
                 o.slots_rejected_at,
                 o.created_at,
                 u.name as assigned_to_name

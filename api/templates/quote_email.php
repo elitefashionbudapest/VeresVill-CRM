@@ -19,6 +19,45 @@ function getQuoteEmailHtml(array $order, int $amount, array $slots, string $toke
     $formattedOriginal = number_format($originalAmount, 0, ',', '.');
     $savings = number_format($originalAmount - $amount, 0, ',', '.');
 
+    $energyCertAmount = (int) ($order['energy_certificate_amount'] ?? 0);
+    $hasEnergyCert = $energyCertAmount > 0;
+    $formattedEnergyCert = $hasEnergyCert ? number_format($energyCertAmount, 0, ',', '.') : '';
+    $totalAmount = $hasEnergyCert ? number_format($amount + $energyCertAmount, 0, ',', '.') : '';
+
+    $electricLabel = $hasEnergyCert
+        ? '<p style="color: #5A6C7D; font-size: 14px; font-weight: 600; margin: 0 0 8px;">Villamos biztonsági felülvizsgálat:</p>'
+        : '';
+
+    $energyCertBlock = '';
+    if ($hasEnergyCert) {
+        $energyCertBlock = <<<ECERT
+    <tr>
+        <td style="padding: 0 40px 25px;">
+            <p style="color: #5A6C7D; font-size: 14px; font-weight: 600; margin: 0 0 8px;">Energetikai tanúsítvány:</p>
+            <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                    <td style="background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); padding: 20px; border-radius: 12px; text-align: center;">
+                        <p style="color: #FFFFFF; margin: 0; font-size: 30px; font-weight: 800;">{$formattedEnergyCert} Ft</p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+    <tr>
+        <td style="padding: 0 40px 25px;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                    <td style="background: #2C3E50; padding: 18px; border-radius: 12px; text-align: center;">
+                        <p style="color: rgba(255,255,255,0.7); margin: 0 0 4px; font-size: 14px;">Összesen:</p>
+                        <p style="color: #FFFFFF; margin: 0; font-size: 32px; font-weight: 800;">{$totalAmount} Ft</p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+ECERT;
+    }
+
     $appUrl = rtrim(env('APP_URL', 'https://veresvill.hu'), '/');
 
     $dayNames = ['vasárnap', 'hétfő', 'kedd', 'szerda', 'csütörtök', 'péntek', 'szombat'];
@@ -111,9 +150,10 @@ SLOT;
         </td>
     </tr>
 
-    <!-- Összeg -->
+    <!-- Összeg: villamos felülvizsgálat -->
     <tr>
         <td style="padding: 0 40px 25px;">
+            {$electricLabel}
             <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                     <td style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); padding: 25px; border-radius: 12px; text-align: center;">
@@ -125,6 +165,8 @@ SLOT;
             </table>
         </td>
     </tr>
+
+    {$energyCertBlock}
 
     <!-- Időpont választás -->
     <tr>
@@ -219,9 +261,16 @@ function getQuoteEmailText(array $order, int $amount, array $slots, string $toke
     $text .= "Cím: {$address}\n";
     $text .= "Típus: {$propertyLabel}\n";
     $text .= "Méret: {$size} m²\n\n";
+    $energyCertAmount = (int) ($order['energy_certificate_amount'] ?? 0);
+
+    $text .= "VILLAMOS FELÜLVIZSGÁLAT:\n";
     $text .= "EREDETI ÁR: {$formattedOriginal} Ft\n";
-    $text .= "KEDVEZMÉNYES ÁR: {$formattedAmount} Ft (-10%)\n\n";
-    $text .= "VÁLASSZON IDŐPONTOT:\n";
+    $text .= "KEDVEZMÉNYES ÁR: {$formattedAmount} Ft (-10%)\n";
+    if ($energyCertAmount > 0) {
+        $text .= "\nENERGETIKAI TANÚSÍTVÁNY: " . number_format($energyCertAmount, 0, ',', '.') . " Ft\n";
+        $text .= "\nÖSSZESEN: " . number_format($amount + $energyCertAmount, 0, ',', '.') . " Ft\n";
+    }
+    $text .= "\nVÁLASSZON IDŐPONTOT:\n";
 
     foreach ($slots as $slot) {
         $startDt = new DateTime($slot['start_time']);

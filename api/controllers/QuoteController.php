@@ -22,6 +22,9 @@ class QuoteController {
         }
 
         $amount = $v->getInt('amount');
+        $energyCertAmount = isset($input['energy_cert_amount']) && (int) $input['energy_cert_amount'] > 0
+            ? (int) $input['energy_cert_amount']
+            : null;
         $slots  = $input['slots'] ?? [];
 
         if (empty($slots) || !is_array($slots)) {
@@ -69,10 +72,10 @@ class QuoteController {
             // Megrendelés frissítése
             $stmt = $pdo->prepare("
                 UPDATE vv_orders
-                SET status = ?, quote_amount = ?, quote_token = ?, quote_token_expires = ?, slots_rejected_at = NULL, updated_at = NOW()
+                SET status = ?, quote_amount = ?, energy_certificate_amount = ?, quote_token = ?, quote_token_expires = ?, slots_rejected_at = NULL, updated_at = NOW()
                 WHERE id = ?
             ");
-            $stmt->execute([ORDER_STATUS_QUOTE_SENT, $amount, $quoteToken, $expiresAt, $orderId]);
+            $stmt->execute([ORDER_STATUS_QUOTE_SENT, $amount, $energyCertAmount, $quoteToken, $expiresAt, $orderId]);
 
             // Régi slot-ok törlése (ha újraküldjük)
             $stmt = $pdo->prepare("DELETE FROM vv_time_slots WHERE order_id = ?");

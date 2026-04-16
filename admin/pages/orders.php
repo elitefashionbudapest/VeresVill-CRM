@@ -131,6 +131,7 @@ async function loadOrders() {
                 <td class="d-none d-lg-table-cell">
                     <small>${escHtml(o.property_type_label)}</small><br>
                     <small class="text-muted">${o.size} m²</small>
+                    ${o.energy_certificate == 1 ? '<br><span class="badge badge-warning" style="font-size:10px;"><i class="fas fa-bolt"></i> Energetikai</span>' : ''}
                 </td>
                 <td class="d-none d-md-table-cell">
                     <small>${escHtml(truncate(o.customer_address, 40))}</small>
@@ -242,6 +243,11 @@ async function showOrder(id) {
                                 <div class="order-detail-label">Megjegyzés</div>
                                 <div class="order-detail-value">${escHtml(o.message)}</div>
                             </div>` : ''}
+                            ${o.energy_certificate == 1 ? `
+                            <div class="col-md-6 mb-3">
+                                <div class="order-detail-label">Energetikai tanúsítvány</div>
+                                <div class="order-detail-value"><span class="badge badge-warning" style="font-size:14px;"><i class="fas fa-bolt mr-1"></i>Igen, kér árajánlatot</span></div>
+                            </div>` : ''}
                             <div class="col-12 mb-3">
                                 <div class="order-detail-label">Beérkezés</div>
                                 <div class="order-detail-value">${VV.formatDateTime(o.created_at)}</div>
@@ -260,8 +266,15 @@ async function showOrder(id) {
                         <div class="form-group">
                             <label>Árajánlat összege (Ft)</label>
                             <input type="number" id="quote-amount" class="form-control form-control-lg" placeholder="pl. 35000" min="1000" step="1000" value="${o.quote_amount || ''}" style="font-size:1.4rem;font-weight:700;">
-                            <small class="text-muted">Bruttó ár ÁFÁ-val</small>
+                            <small class="text-muted">Bruttó ár ÁFÁ-val (10% kedvezmény automatikusan megjelenik az emailben)</small>
                         </div>
+
+                        ${o.energy_certificate == 1 ? `
+                        <div class="form-group">
+                            <label><i class="fas fa-bolt text-warning mr-1"></i>Energetikai tanúsítvány ára (Ft)</label>
+                            <input type="number" id="energy-cert-amount" class="form-control" placeholder="pl. 25000" min="1000" step="1000" value="${o.energy_certificate_amount || ''}">
+                            <small class="text-muted">Ez az összeg kedvezmény nélkül jelenik meg az emailben</small>
+                        </div>` : ''}
 
                         <label class="mb-2">Válassz 2-3 szabad időpontot <small class="text-muted">(kattints a zöld cellákra)</small></label>
 
@@ -291,7 +304,8 @@ async function showOrder(id) {
                         <h3 class="card-title"><i class="fas fa-file-invoice mr-2"></i>Árajánlat</h3>
                     </div>
                     <div class="card-body">
-                        <h3 class="text-primary">${VV.formatMoney(o.quote_amount)}</h3>
+                        <h3 class="text-primary">${VV.formatMoney(o.quote_amount)} <small class="text-muted" style="font-size:14px;">(villamos felülvizsgálat)</small></h3>
+                        ${o.energy_certificate_amount ? `<h4 class="text-warning mb-1"><i class="fas fa-bolt mr-1"></i>${VV.formatMoney(o.energy_certificate_amount)} <small class="text-muted" style="font-size:13px;">(energetikai tanúsítvány)</small></h4>` : ''}
                         <small class="text-muted">Küldve: ${VV.formatDateTime(o.quote_sent_at)}</small>
                         ${o.quote_accepted_at ? `<br><small class="text-success"><i class="fas fa-check mr-1"></i>Elfogadva: ${VV.formatDateTime(o.quote_accepted_at)}</small>` : ''}
 
@@ -642,11 +656,17 @@ async function sendQuote(orderId) {
         end: s.end
     }));
 
+    const energyCertEl = document.getElementById('energy-cert-amount');
+    const energyCertAmount = energyCertEl ? parseInt(energyCertEl.value) || 0 : 0;
+
     const btn = document.getElementById('send-quote-btn');
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Küldés...';
 
-    const res = await VV.post(`orders/${orderId}/quote`, { amount, slots });
+    const body = { amount, slots };
+    if (energyCertAmount > 0) body.energy_cert_amount = energyCertAmount;
+
+    const res = await VV.post(`orders/${orderId}/quote`, body);
     if (res && res.success) {
         VV.toast('Árajánlat sikeresen elküldve!', 'success');
         showOrder(orderId);
