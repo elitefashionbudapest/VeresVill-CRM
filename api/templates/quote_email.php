@@ -179,15 +179,29 @@ SLOT;
     <!-- Időpont választás -->
     <tr>
         <td style="padding: 0 40px 15px;">
+            <?php if (!empty($slots)): ?>
             <h3 style="color: #4A90E2; font-size: 18px; margin: 0 0 5px;">Válasszon időpontot:</h3>
             <p style="color: #5A6C7D; font-size: 14px; margin: 0 0 15px;">Kattintson a kiválasztott időpontra a megerősítéshez.</p>
             <table width="100%" cellpadding="0" cellspacing="0">
                 {$slotButtons}
             </table>
+            <?php else: ?>
+            <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                    <td style="text-align: center;">
+                        <a href="{$appUrl}/public/quote.php?token={$token}" style="display: inline-block; background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: #FFFFFF; padding: 18px 50px; border-radius: 50px; text-decoration: none; font-weight: 700; font-size: 16px; text-align: center;">
+                            ✓ Elfogadom az árajánlatot
+                        </a>
+                        <p style="color: #5A6C7D; font-size: 13px; margin: 12px 0 0;">Az elfogadás után felvesszük Önnel a kapcsolatot az időpont egyeztetéséhez.</p>
+                    </td>
+                </tr>
+            </table>
+            <?php endif; ?>
         </td>
     </tr>
 
-    <!-- Egyik sem felel meg -->
+    <!-- Egyik sem felel meg (csak ha vannak slotok) -->
+    <?php if (!empty($slots)): ?>
     <tr>
         <td style="padding: 0 40px 30px; text-align: center;">
             <a href="{$appUrl}/public/quote.php?token={$token}&reject=1" style="display: inline-block; color: #E65100; padding: 10px 20px; border: 2px solid #FFB74D; border-radius: 50px; text-decoration: none; font-weight: 600; font-size: 14px; background: #FFF8E1;">
@@ -196,6 +210,7 @@ SLOT;
             <p style="color: #9e9e9e; font-size: 12px; margin: 8px 0 0;">Jelezze felénk és új időpontokkal keressük.</p>
         </td>
     </tr>
+    <?php endif; ?>
 
     <!-- Megjegyzés -->
     <tr>

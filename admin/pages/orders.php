@@ -301,7 +301,7 @@ async function showOrder(id) {
                         <!-- Kiválasztott időpontok -->
                         <div id="slot-picker-selected" class="mt-3"></div>
 
-                        <button class="btn btn-primary btn-lg btn-block mt-3" onclick="sendQuote(${o.id})" id="send-quote-btn" disabled>
+                        <button class="btn btn-primary btn-lg btn-block mt-3" onclick="sendQuote(${o.id})" id="send-quote-btn">
                             <i class="fas fa-paper-plane mr-1"></i>Árajánlat küldése emailben
                         </button>
                     </div>
@@ -626,12 +626,9 @@ function renderSelectedSlots() {
     if (!container) return;
 
     if (slotPickerSelected.length === 0) {
-        container.innerHTML = '<p class="text-muted text-center mb-0"><small>Kattints a zöld cellákra az időpont kiválasztásához</small></p>';
-        if (btn) btn.disabled = true;
+        container.innerHTML = '<p class="text-muted text-center mb-0"><small>Kattints a zöld cellákra az időpont kiválasztásához (opcionális)</small></p>';
         return;
     }
-
-    if (btn) btn.disabled = false;
 
     container.innerHTML = '<strong class="d-block mb-2">Kiválasztott időpontok:</strong>' +
         slotPickerSelected.map((s, i) => {
@@ -650,11 +647,6 @@ async function sendQuote(orderId) {
     const amount = parseInt(document.getElementById('quote-amount').value);
     if (!amount || amount < 1000) {
         VV.toast('Adjon meg érvényes összeget (min. 1000 Ft).', 'error');
-        return;
-    }
-
-    if (slotPickerSelected.length === 0) {
-        VV.toast('Válasszon ki legalább 1 időpontot a naptárból.', 'error');
         return;
     }
 

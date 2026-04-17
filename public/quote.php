@@ -235,10 +235,12 @@
             `;
         }).join('');
 
+        const hasSlots = q.time_slots && q.time_slots.length > 0;
+
         document.getElementById('content').innerHTML = `
             <div class="body">
                 <div class="greeting">Tisztelt ${escHtml(firstName)}!</div>
-                <p class="subtitle">Köszönjük megrendelését! Az Ön árajánlata elkészült. Kérjük, válasszon az alábbi időpontok közül.</p>
+                <p class="subtitle">Köszönjük megrendelését! Az Ön árajánlata elkészült.${hasSlots ? ' Kérjük, válasszon az alábbi időpontok közül.' : ''}</p>
 
                 <div class="summary">
                     <div class="summary-row">
@@ -258,12 +260,18 @@
                     ${grossHtml}
                 </div>
 
+                ${hasSlots ? `
                 <div class="slots-title">Válasszon időpontot:</div>
                 ${slotsHtml}
-
                 <button class="accept-btn" id="accept-btn" onclick="acceptQuote()" ${selectedSlotId ? '' : 'disabled'}>
                     &#10003; Elfogadom az árajánlatot és az időpontot
                 </button>
+                ` : `
+                <button class="accept-btn" id="accept-btn" onclick="acceptQuote()">
+                    &#10003; Elfogadom az árajánlatot
+                </button>
+                <p style="text-align:center;color:#5A6C7D;font-size:13px;margin-top:12px;">Az elfogadás után felvesszük Önnel a kapcsolatot az időpont egyeztetéséhez.</p>
+                `}
             </div>
         `;
     }
@@ -283,10 +291,11 @@
         btn.textContent = 'Feldolgozás...';
 
         try {
+            const body = selectedSlotId ? { slot_id: selectedSlotId } : {};
             const res = await fetch(`../api/quote/accept/${token}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ slot_id: selectedSlotId })
+                body: JSON.stringify(body)
             });
 
             const data = await res.json();

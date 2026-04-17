@@ -27,10 +27,6 @@ class QuoteController {
             : null;
         $slots  = $input['slots'] ?? [];
 
-        if (empty($slots) || !is_array($slots)) {
-            Response::error('Legalább egy időpont megadása kötelező.', 422);
-        }
-
         // Megrendelés lekérése
         $stmt = $pdo->prepare("SELECT * FROM vv_orders WHERE id = ?");
         $stmt->execute([$orderId]);
@@ -248,14 +244,7 @@ class QuoteController {
     public function acceptQuote(string $token, array $input = []): void {
         $pdo = getDbConnection();
 
-        $v = new Validator($input);
-        $v->required('slot_id', 'Időpont');
-
-        if ($v->fails()) {
-            Response::error($v->firstError(), 422, $v->errors());
-        }
-
-        $slotId = $v->getInt('slot_id');
+        $slotId = isset($input['slot_id']) ? (int) $input['slot_id'] : 0;
 
         // Megrendelés lekérése token alapján
         $stmt = $pdo->prepare("
@@ -281,122 +270,116 @@ class QuoteController {
             Response::error('Ez az árajánlat már el lett fogadva.', 422);
         }
 
-        // Slot ellenőrzés
-        $stmt = $pdo->prepare("
-            SELECT ts.*, u.name as worker_name
-            FROM vv_time_slots ts
-            LEFT JOIN vv_users u ON ts.worker_id = u.id
-            WHERE ts.id = ? AND ts.order_id = ?
-            LIMIT 1
-        ");
-        $stmt->execute([$slotId, $order['id']]);
-        $slot = $stmt->fetch();
+        $slot = null;
 
-        if (!$slot) {
-            Response::error('A kiválasztott időpont nem tartozik ehhez a megrendeléshez.', 422);
+        if ($slotId > 0) {
+            // Slot ellenőrzés
+            $stmt = $pdo->prepare("
+                SELECT ts.*, u.name as worker_name
+                FROM vv_time_slots ts
+                LEFT JOIN vv_users u ON ts.worker_id = u.id
+                WHERE ts.id = ? AND ts.order_id = ?
+                LIMIT 1
+            ");
+            $stmt->execute([$slotId, $order['id']]);
+            $slot = $stmt->fetch();
+
+            if (!$slot) {
+                Response::error('A kiválasztott időpont nem tartozik ehhez a megrendeléshez.', 422);
+            }
+
+            // Ütközés ellenőrzés — max 2 foglalás engedélyezett ugyanarra az időpontra.
+            $stmt = $pdo->prepare("
+                SELECT COUNT(*) as cnt FROM vv_calendar_events
+                WHERE user_id = ? AND event_date = ? AND start_time < ? AND end_time > ?
+            ");
+            $stmt->execute([$slot['worker_id'], $slot['slot_date'], $slot['slot_end'], $slot['slot_start']]);
+            $calendarCount = (int) $stmt->fetch()['cnt'];
+
+            $stmt = $pdo->prepare("
+                SELECT COUNT(*) as cnt FROM vv_time_slots
+                WHERE worker_id = ? AND slot_date = ? AND slot_start < ? AND slot_end > ?
+                AND is_selected = 1 AND order_id != ?
+            ");
+            $stmt->execute([$slot['worker_id'], $slot['slot_date'], $slot['slot_end'], $slot['slot_start'], $order['id']]);
+            $otherSelectedCount = (int) $stmt->fetch()['cnt'];
+
+            if ($calendarCount + $otherSelectedCount >= 2) {
+                Response::error('Sajnáljuk, ezt az időpontot már ketten lefoglalták. Kérjük, válasszon másik időpontot!', 409);
+            }
         }
 
-        // Utkozes ellenorzes — max 2 foglalas engedelyezett ugyanarra az idopontra.
-        // Osszeszamoljuk a megerositett esemenyek + mas megrendelesek elfogadott slotjait.
-        $stmt = $pdo->prepare("
-            SELECT COUNT(*) as cnt FROM vv_calendar_events
-            WHERE user_id = ? AND event_date = ? AND start_time < ? AND end_time > ?
-        ");
-        $stmt->execute([$slot['worker_id'], $slot['slot_date'], $slot['slot_end'], $slot['slot_start']]);
-        $calendarCount = (int) $stmt->fetch()['cnt'];
-
-        $stmt = $pdo->prepare("
-            SELECT COUNT(*) as cnt FROM vv_time_slots
-            WHERE worker_id = ? AND slot_date = ? AND slot_start < ? AND slot_end > ?
-            AND is_selected = 1 AND order_id != ?
-        ");
-        $stmt->execute([$slot['worker_id'], $slot['slot_date'], $slot['slot_end'], $slot['slot_start'], $order['id']]);
-        $otherSelectedCount = (int) $stmt->fetch()['cnt'];
-
-        if ($calendarCount + $otherSelectedCount >= 2) {
-            Response::error('Sajnáljuk, ezt az időpontot már ketten lefoglalták. Kérjük, válasszon másik időpontot!', 409);
-        }
+        $newStatus = $slot ? ORDER_STATUS_TIME_SELECTED : ORDER_STATUS_ACCEPTED;
 
         $pdo->beginTransaction();
 
         try {
-            // Slot kijelölése
-            $stmt = $pdo->prepare("
-                UPDATE vv_time_slots SET is_selected = 0 WHERE order_id = ?
-            ");
-            $stmt->execute([$order['id']]);
-
-            $stmt = $pdo->prepare("
-                UPDATE vv_time_slots SET is_selected = 1 WHERE id = ?
-            ");
-            $stmt->execute([$slotId]);
+            if ($slot) {
+                // Slot kijelölése
+                $pdo->prepare("UPDATE vv_time_slots SET is_selected = 0 WHERE order_id = ?")->execute([$order['id']]);
+                $pdo->prepare("UPDATE vv_time_slots SET is_selected = 1 WHERE id = ?")->execute([$slotId]);
+            }
 
             // Megrendelés státusz frissítés
-            $stmt = $pdo->prepare("
-                UPDATE vv_orders
-                SET status = ?, updated_at = NOW()
-                WHERE id = ?
-            ");
-            $stmt->execute([ORDER_STATUS_TIME_SELECTED, $order['id']]);
+            $stmt = $pdo->prepare("UPDATE vv_orders SET status = ?, updated_at = NOW() WHERE id = ?");
+            $stmt->execute([$newStatus, $order['id']]);
 
             // Státusz napló
+            $logNote = $slot
+                ? "Ügyfél kiválasztotta az időpontot: {$slot['slot_date']} {$slot['slot_start']}-{$slot['slot_end']}"
+                : 'Ügyfél elfogadta az árajánlatot (időpont nélkül).';
             $stmt = $pdo->prepare("
                 INSERT INTO vv_order_status_log (order_id, old_status, new_status, changed_by, note)
                 VALUES (?, ?, ?, NULL, ?)
             ");
-            $stmt->execute([
-                $order['id'],
-                $order['status'],
-                ORDER_STATUS_TIME_SELECTED,
-                "Ügyfél kiválasztotta az időpontot: {$slot['slot_date']} {$slot['slot_start']}-{$slot['slot_end']}",
-            ]);
+            $stmt->execute([$order['id'], $order['status'], $newStatus, $logNote]);
 
-            // Naptár esemény létrehozása
-            $title = ($order['customer_name'] ?? '') . ' - ' . ($order['customer_address'] ?? '');
-
-            $stmt = $pdo->prepare("
-                INSERT INTO vv_calendar_events (user_id, order_id, title, event_date, start_time, end_time, event_type)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            ");
-            $stmt->execute([
-                $slot['worker_id'],
-                $order['id'],
-                $title,
-                $slot['slot_date'],
-                $slot['slot_start'],
-                $slot['slot_end'],
-                EVENT_APPOINTMENT,
-            ]);
+            if ($slot) {
+                // Naptár esemény létrehozása
+                $title = ($order['customer_name'] ?? '') . ' - ' . ($order['customer_address'] ?? '');
+                $stmt = $pdo->prepare("
+                    INSERT INTO vv_calendar_events (user_id, order_id, title, event_date, start_time, end_time, event_type)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                ");
+                $stmt->execute([
+                    $slot['worker_id'],
+                    $order['id'],
+                    $title,
+                    $slot['slot_date'],
+                    $slot['slot_start'],
+                    $slot['slot_end'],
+                    EVENT_APPOINTMENT,
+                ]);
+            }
 
             $pdo->commit();
         } catch (\Exception $e) {
             $pdo->rollBack();
-            Response::error('Hiba történt az időpont kiválasztásakor.', 500);
+            Response::error('Hiba történt az árajánlat elfogadásakor.', 500);
         }
 
-        // Push értesítés küldése (placeholder - PushService még nem létezik)
-        // PushService::notifyNewAppointment($slot['worker_id'], $order['id'], $slot);
+        // Google Sheets + visszaigazoló email csak ha van slot
+        if ($slot) {
+            try {
+                require_once __DIR__ . '/../services/GoogleCalendarService.php';
+                GoogleCalendarService::appendAcceptedSlotRow($order, $slot);
+            } catch (\Exception $sheetErr) {
+                error_log('Sheets append exception: ' . $sheetErr->getMessage());
+            }
 
-        // Google Sheets: elfogadott időpont új sorként (nem kritikus)
-        try {
-            require_once __DIR__ . '/../services/GoogleCalendarService.php';
-            GoogleCalendarService::appendAcceptedSlotRow($order, $slot);
-        } catch (\Exception $sheetErr) {
-            error_log('Sheets append exception: ' . $sheetErr->getMessage());
+            try {
+                require_once __DIR__ . '/../services/MailService.php';
+                MailService::sendCustomerConfirmation($order, $slot);
+            } catch (\Exception $mailErr) {
+                error_log('Customer confirmation mail exception: ' . $mailErr->getMessage());
+            }
         }
 
-        // Megrendelői visszaigazoló email az elfogadott időponttal (nem kritikus)
-        try {
-            require_once __DIR__ . '/../services/MailService.php';
-            MailService::sendCustomerConfirmation($order, $slot);
-        } catch (\Exception $mailErr) {
-            error_log('Customer confirmation mail exception: ' . $mailErr->getMessage());
-        }
-
+        $msg = $slot ? 'Időpont sikeresen kiválasztva. Köszönjük!' : 'Árajánlat elfogadva. Hamarosan felvesszük Önnel a kapcsolatot!';
         Response::success([
             'order_id' => $order['id'],
             'slot'     => $slot,
-        ], 'Időpont sikeresen kiválasztva. Köszönjük!');
+        ], $msg);
     }
 
     /**
