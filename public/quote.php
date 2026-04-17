@@ -195,7 +195,7 @@
     function renderQuote(q) {
         const firstName = q.customer_name || '';
         const discountedAmount = q.quote_amount;
-        const originalAmount = Math.round(discountedAmount * 1.1);
+        const originalAmount = Math.round(discountedAmount * 1.1111111111);
         const savings = originalAmount - discountedAmount;
         const amount = new Intl.NumberFormat('hu-HU').format(discountedAmount);
         const originalFormatted = new Intl.NumberFormat('hu-HU').format(originalAmount);
