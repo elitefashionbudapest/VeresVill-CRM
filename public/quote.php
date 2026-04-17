@@ -182,7 +182,11 @@
             const data = await res.json();
 
             if (!data.success) {
-                showError(data.message || 'Az árajánlat nem található vagy lejárt.');
+                if (res.status === 404) {
+                    showDeletedError();
+                } else {
+                    showError(data.message || 'Az árajánlat nem található vagy lejárt.');
+                }
                 return;
             }
 
@@ -200,6 +204,10 @@
         const amount = new Intl.NumberFormat('hu-HU').format(discountedAmount);
         const originalFormatted = new Intl.NumberFormat('hu-HU').format(originalAmount);
         const savingsFormatted = new Intl.NumberFormat('hu-HU').format(savings);
+
+        const grossHtml = q.is_company
+            ? `<div style="color:rgba(255,255,255,0.75);font-size:14px;margin-top:8px;">Bruttó ár (27% ÁFA-val): <strong style="color:#FFD54F;">${new Intl.NumberFormat('hu-HU').format(Math.round(discountedAmount * 1.27))} Ft</strong></div>`
+            : '';
 
         const slotsHtml = (q.time_slots || []).map(s => {
             const d = new Date(s.slot_date);
@@ -247,6 +255,7 @@
                     <div style="color:rgba(255,255,255,0.6);font-size:14px;text-decoration:line-through;">${originalFormatted} Ft</div>
                     <div class="price-amount">${amount} Ft</div>
                     <div style="color:#FFD54F;font-size:15px;font-weight:700;margin-top:4px;">-10% kedvezmény (megtakarítás: ${savingsFormatted} Ft)</div>
+                    ${grossHtml}
                 </div>
 
                 <div class="slots-title">Válasszon időpontot:</div>
@@ -344,6 +353,25 @@
             btn.textContent = 'Küldés';
             alert('Hálózati hiba. Kérjük, próbálja újra.');
         }
+    }
+
+    function showDeletedError() {
+        document.getElementById('content').innerHTML = `
+            <div class="error-msg">
+                <div style="font-size:52px;margin-bottom:15px;">😔</div>
+                <h2 style="color:#FF6B6B;">Sajnáljuk!</h2>
+                <p style="color:#2C3E50;font-size:16px;margin-top:15px;line-height:1.6;max-width:340px;margin-left:auto;margin-right:auto;">
+                    Ez az árajánlat már nem elérhető, vagy időközben más lefoglalta az időpontot.
+                </p>
+                <p style="color:#5A6C7D;margin-top:25px;font-size:14px;">Új ajánlatért keressen minket:</p>
+                <p style="margin-top:10px;">
+                    <a href="tel:+36703686638" style="color:#4A90E2;font-weight:700;font-size:20px;text-decoration:none;">+36 70 368 6638</a>
+                </p>
+                <p style="margin-top:8px;">
+                    <a href="mailto:veresvill.ads@gmail.com" style="color:#4A90E2;font-weight:600;font-size:14px;text-decoration:none;">veresvill.ads@gmail.com</a>
+                </p>
+            </div>
+        `;
     }
 
     function showError(msg) {

@@ -165,11 +165,13 @@ class QuoteController {
                 o.customer_email,
                 o.customer_phone,
                 o.customer_address,
+                o.is_company,
                 o.property_type,
                 o.size,
                 o.urgency,
                 o.status,
                 o.quote_amount,
+                o.energy_certificate_amount,
                 o.quote_token_expires,
                 o.message
             FROM vv_orders o

@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS vv_orders (
     customer_email VARCHAR(255) NOT NULL,
     customer_phone VARCHAR(30) NOT NULL,
     customer_address TEXT NOT NULL,
+    is_company TINYINT(1) NOT NULL DEFAULT 0,
     property_type VARCHAR(50) NOT NULL,
     property_type_label VARCHAR(100) NOT NULL,
     size INT UNSIGNED NOT NULL,

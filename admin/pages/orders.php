@@ -227,6 +227,16 @@ async function showOrder(id) {
                                 <div class="order-detail-value">${escHtml(o.customer_address)}</div>
                             </div>
                             <div class="col-md-6 mb-3">
+                                <div class="order-detail-label">Megrendelő típusa</div>
+                                <div class="order-detail-value d-flex align-items-center">
+                                    ${o.is_company ? '<span class="badge badge-info mr-2"><i class="fas fa-building mr-1"></i>Céges</span>' : '<span class="badge badge-secondary mr-2"><i class="fas fa-user mr-1"></i>Magánszemély</span>'}
+                                    ${isAdmin ? `<div class="custom-control custom-switch ml-2">
+                                        <input type="checkbox" class="custom-control-input" id="is-company-toggle" ${o.is_company ? 'checked' : ''} onchange="toggleCompany(${o.id}, this.checked)">
+                                        <label class="custom-control-label" for="is-company-toggle">Céges</label>
+                                    </div>` : ''}
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
                                 <div class="order-detail-label">Ingatlan típus</div>
                                 <div class="order-detail-value">${escHtml(o.property_type_label)}</div>
                             </div>
@@ -780,6 +790,16 @@ function escHtml(str) {
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
+}
+
+// Céges jelölő toggle
+async function toggleCompany(orderId, isCompany) {
+    const res = await VV.put(`orders/${orderId}`, { is_company: isCompany ? 1 : 0 });
+    if (res && res.success) {
+        VV.toast(isCompany ? 'Céges megrendelőként jelölve.' : 'Magánszemélyként jelölve.', 'success');
+    } else {
+        VV.toast(res?.message || 'Hiba történt.', 'error');
+    }
 }
 
 // Megrendelés megnyitása külső hívásból (dashboard-ról)

@@ -85,6 +85,7 @@ class OrderController {
                 o.customer_email,
                 o.customer_phone,
                 o.customer_address,
+                o.is_company,
                 o.property_type,
                 o.size,
                 o.urgency,
@@ -226,6 +227,11 @@ class OrderController {
         if (array_key_exists('admin_notes', $input)) {
             $sets[]   = 'admin_notes = ?';
             $params[] = $input['admin_notes'];
+        }
+
+        if (array_key_exists('is_company', $input)) {
+            $sets[]   = 'is_company = ?';
+            $params[] = $input['is_company'] ? 1 : 0;
         }
 
         if (empty($sets)) {

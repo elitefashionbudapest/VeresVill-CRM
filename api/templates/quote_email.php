@@ -19,6 +19,13 @@ function getQuoteEmailHtml(array $order, int $amount, array $slots, string $toke
     $formattedOriginal = number_format($originalAmount, 0, ',', '.');
     $savings = number_format($originalAmount - $amount, 0, ',', '.');
 
+    $isCompany = !empty($order['is_company']);
+    $grossAmount = $isCompany ? (int) round($amount * 1.27) : 0;
+    $formattedGross = $isCompany ? number_format($grossAmount, 0, ',', '.') : '';
+    $companyGrossLine = $isCompany
+        ? "<p style=\"color: rgba(255,255,255,0.75); margin: 8px 0 0; font-size: 14px;\">Bruttó ár (27% ÁFA-val): <strong style=\"color:#FFD54F;\">{$formattedGross} Ft</strong></p>"
+        : '';
+
     $energyCertAmount = (int) ($order['energy_certificate_amount'] ?? 0);
     $hasEnergyCert = $energyCertAmount > 0;
     $formattedEnergyCert = $hasEnergyCert ? number_format($energyCertAmount, 0, ',', '.') : '';
@@ -160,6 +167,7 @@ SLOT;
                         <p style="color: rgba(255,255,255,0.7); margin: 0 0 4px; font-size: 14px;"><span style="text-decoration: line-through;">{$formattedOriginal} Ft</span></p>
                         <p style="color: #FFFFFF; margin: 0; font-size: 36px; font-weight: 800;">{$formattedAmount} Ft</p>
                         <p style="color: #FFD54F; margin: 8px 0 0; font-size: 15px; font-weight: 700;">-10% kedvezmény (megtakarítás: {$savings} Ft)</p>
+                        {$companyGrossLine}
                     </td>
                 </tr>
             </table>
