@@ -97,12 +97,15 @@ class QuoteController {
                 INSERT INTO vv_order_status_log (order_id, old_status, new_status, changed_by, note)
                 VALUES (?, ?, ?, ?, ?)
             ");
+            $logNote = $order['status'] === ORDER_STATUS_QUOTE_SENT
+                ? "Árajánlat módosítva és újraküldve: {$amount} Ft"
+                : "Árajánlat küldve: {$amount} Ft";
             $stmt->execute([
                 $orderId,
                 $order['status'],
                 ORDER_STATUS_QUOTE_SENT,
                 $user['id'],
-                "Árajánlat küldve: {$amount} Ft",
+                $logNote,
             ]);
 
             $pdo->commit();
@@ -315,8 +318,8 @@ class QuoteController {
 
         try {
             if ($slot) {
-                // Slot kijelölése
-                $pdo->prepare("UPDATE vv_time_slots SET is_selected = 0 WHERE order_id = ?")->execute([$order['id']]);
+                // Többi felajánlott slot törlése, a kiválasztott megmarad
+                $pdo->prepare("DELETE FROM vv_time_slots WHERE order_id = ? AND id != ?")->execute([$order['id'], $slotId]);
                 $pdo->prepare("UPDATE vv_time_slots SET is_selected = 1 WHERE id = ?")->execute([$slotId]);
             }
 
@@ -596,11 +599,9 @@ class QuoteController {
         $pdo->beginTransaction();
 
         try {
-            $stmt = $pdo->prepare("UPDATE vv_time_slots SET is_selected = 0 WHERE order_id = ?");
-            $stmt->execute([$orderId]);
-
-            $stmt = $pdo->prepare("UPDATE vv_time_slots SET is_selected = 1 WHERE id = ?");
-            $stmt->execute([$slot['id']]);
+            // Többi felajánlott slot törlése, a kiválasztott megmarad
+            $pdo->prepare("DELETE FROM vv_time_slots WHERE order_id = ? AND id != ?")->execute([$orderId, $slot['id']]);
+            $pdo->prepare("UPDATE vv_time_slots SET is_selected = 1 WHERE id = ?")->execute([$slot['id']]);
 
             $stmt = $pdo->prepare("
                 UPDATE vv_orders

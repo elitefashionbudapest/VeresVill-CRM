@@ -266,11 +266,11 @@ async function showOrder(id) {
                     </div>
                 </div>
 
-                <!-- Árajánlat küldés (ha státusz = uj) -->
-                ${o.status === 'uj' && isAdmin ? `
+                <!-- Árajánlat küldés / módosítás -->
+                ${(o.status === 'uj' || o.status === 'ajanlat_kuldve') && isAdmin ? `
                 <div class="card card-outline card-primary">
                     <div class="card-header">
-                        <h3 class="card-title"><i class="fas fa-file-invoice mr-2"></i>Árajánlat küldése</h3>
+                        <h3 class="card-title"><i class="fas fa-file-invoice mr-2"></i>${o.status === 'ajanlat_kuldve' ? 'Árajánlat módosítása' : 'Árajánlat küldése'}</h3>
                     </div>
                     <div class="card-body">
                         <div class="form-group">
@@ -302,7 +302,7 @@ async function showOrder(id) {
                         <div id="slot-picker-selected" class="mt-3"></div>
 
                         <button class="btn btn-primary btn-lg btn-block mt-3" onclick="sendQuote(${o.id})" id="send-quote-btn">
-                            <i class="fas fa-paper-plane mr-1"></i>Árajánlat küldése emailben
+                            <i class="fas fa-paper-plane mr-1"></i>${o.status === 'ajanlat_kuldve' ? 'Módosítás és újraküldés emailben' : 'Árajánlat küldése emailben'}
                         </button>
                     </div>
                 </div>` : ''}
@@ -352,9 +352,6 @@ async function showOrder(id) {
 
                         ${isAdmin && o.status === 'ajanlat_kuldve' ? `
                         <hr>
-                        <button class="btn btn-outline-primary btn-block btn-sm mb-3" onclick="resendQuote(${o.id})">
-                            <i class="fas fa-redo mr-1"></i>Új időpontok kiküldése (régiek törlése)
-                        </button>
                         <strong><i class="fas fa-phone mr-1"></i>Manuális időpont (telefonos egyeztetés)</strong>
                         <p class="text-muted mb-2"><small>Ha telefonon egyeztettek időpontot, itt véglegesítheti. Automatikusan visszaigazoló emailt küld az ügyfélnek.</small></p>
                         <div class="form-row">
@@ -439,8 +436,8 @@ async function showOrder(id) {
         </div>
     `;
 
-    // Slot picker inicializálás ha új megrendelés
-    if (o.status === 'uj' && isAdmin) {
+    // Slot picker inicializálás ha új megrendelés vagy árajánlat módosítása
+    if ((o.status === 'uj' || o.status === 'ajanlat_kuldve') && isAdmin) {
         setTimeout(() => initSlotPicker(), 100);
     }
 }
