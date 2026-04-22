@@ -68,7 +68,8 @@ class QuoteController {
             // Megrendelés frissítése
             $stmt = $pdo->prepare("
                 UPDATE vv_orders
-                SET status = ?, quote_amount = ?, energy_certificate_amount = ?, quote_token = ?, quote_token_expires = ?, slots_rejected_at = NULL, updated_at = NOW()
+                SET status = ?, quote_amount = ?, energy_certificate_amount = ?, quote_token = ?, quote_token_expires = ?,
+                    slots_rejected_at = NULL, quote_sent_at = NOW(), reminder_sent_at = NULL, updated_at = NOW()
                 WHERE id = ?
             ");
             $stmt->execute([ORDER_STATUS_QUOTE_SENT, $amount, $energyCertAmount, $quoteToken, $expiresAt, $orderId]);

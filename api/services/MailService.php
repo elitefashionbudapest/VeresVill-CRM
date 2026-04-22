@@ -92,6 +92,29 @@ class MailService
     }
 
     /**
+     * 30 perces emlékeztető email az ügyfélnek az el nem fogadott árajánlatról.
+     */
+    public static function sendQuoteReminder(array $order, array $slots): bool
+    {
+        require_once __DIR__ . '/../templates/quote_reminder.php';
+
+        $token    = $order['quote_token'] ?? '';
+        $htmlBody = getQuoteReminderHtml($order, $slots, $token);
+        $textBody = getQuoteReminderText($order, $slots, $token);
+
+        $subject = '⏰ Emlékeztető: árajánlata még vár Önre — Veresvill';
+
+        return self::sendRaw(
+            $order['customer_email'],
+            $order['customer_name'] ?? '',
+            $subject,
+            $htmlBody,
+            $textBody,
+            env('ADMIN_EMAIL', 'veresvill.ads@gmail.com')
+        );
+    }
+
+    /**
      * Admin értesítés: megrendelő elfogadta az árajánlatot
      *
      * @param array $order        Megrendelés adatai
